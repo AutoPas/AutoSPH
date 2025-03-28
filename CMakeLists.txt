@@ -10,7 +10,7 @@ include(cmake/modules/autopas.cmake)
 add_executable(AutoSPH src/sph.cpp)
 
 # Link the fetched library
-target_link_libraries(AutoSPH PRIVATE autopas)
+target_link_libraries(AutoSPH PRIVATE ${AUTOPAS_LIB})
 
 # Include the fetched library headers
 target_include_directories(AutoSPH PRIVATE autopas)

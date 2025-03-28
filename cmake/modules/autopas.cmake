@@ -24,4 +24,5 @@ FetchContent_Declare(
 # Download and configure the fetched content
 FetchContent_MakeAvailable(autopasfetch)
 
-
+# Linking SPHLibrary also links autopas
+set(AUTOPAS_LIB "SPHLibrary")
