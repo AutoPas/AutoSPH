@@ -23,7 +23,7 @@ include(FetchContent)
 FetchContent_Declare(
     autopasfetch
     GIT_REPOSITORY ${autopasRepoPath}
-    GIT_TAG ${AUTOPAS_TAG}
+    GIT_TAG master
 )
 
 # Get autopas source and binary directories from CMake project
