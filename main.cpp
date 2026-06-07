@@ -19,7 +19,7 @@ using AutoPasContainer = autopas::AutoPas<Particle>;
 
 // using AutoPasContainer = autopas::AutoPas<autopas::ParticleBaseFP64>;
 
-void SetupIC(AutoPasContainer &sphSystem, double *end_time, const std::array<double, 3> &bBoxMax) {
+void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, const std::array<double, 3> &bBoxMax) {
   // Place SPH particles
   AutoPasLog(INFO, "Setup started");
 
@@ -36,7 +36,8 @@ void SetupIC(AutoPasContainer &sphSystem, double *end_time, const std::array<dou
     }
   }
 
-  // Set the end time
+  // Set dt and end time
+  *dt = .002;
   *end_time = .012;
 
   AutoPasLog(INFO, "Setup completed");
@@ -52,19 +53,47 @@ void Initialize(AutoPasContainer &sphSystem) {
 }
 
 void LogParticlePositions(AutoPasContainer &sphSystem) {
-  std::cout << "initialize... completed" << std::endl;
   std::array<double, 3> position;
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
-    // std::cout << part->getMass() << std::endl;
     position = part->getR();
     AutoPasLog(INFO, "Position of particle {}: {}, {}, {}", part->getID(), position[0], position[1], position[2]);
   }
-  std::cout << "initialize... completed" << std::endl;
+}
+
+void leapfrogInitialKick(AutoPasContainer &sphSystem, const double dt) {
+  using namespace autopas::utils::ArrayMath::literals;
+
+  for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
+    part->setVel_half(part->getV() + (part->getAcceleration() * (0.5 * dt)));
+  }
+}
+
+void leapfrogFullDrift(AutoPasContainer &sphSystem, const double dt) {
+  using namespace autopas::utils::ArrayMath::literals;
+
+  // time becomes t + dt;
+  for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
+    part->addR(part->getVel_half() * dt);
+  }
+}
+
+void leapfrogPredict(AutoPasContainer &sphSystem, const double dt) {
+  using namespace autopas::utils::ArrayMath::literals;
+
+  for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
+    part->addV(part->getAcceleration() * dt);
+  }
+}
+
+void leapfrogFinalKick(AutoPasContainer &sphSystem, const double dt) {
+  using namespace autopas::utils::ArrayMath::literals;
+
+  for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
+    part->setV(part->getVel_half() + (part->getAcceleration() * (0.5 * dt)));
+  }
 }
 
 int main() {
-  std::cout<< "Hello from SPH world!\n";
-
   std::array<double, 3> boxMin({0., 0., 0.}), boxMax{};
   boxMax[0] = boxMax[1] = boxMax[2] = 1.;
   double cutoff = 0.03;               // 0.012*2.5=0.03; where 2.5 = kernel support radius
@@ -89,8 +118,21 @@ int main() {
 
   double dt;
   double t_end;
-  SetupIC(sphSystem, &t_end, boxMax);
+  SetupIC(sphSystem, &dt, &t_end, boxMax);
   Initialize(sphSystem);
+  LogParticlePositions(sphSystem);
+
+  size_t step = 0;
+  for (double time = 0.; time < t_end; time += dt, ++step) {
+    leapfrogInitialKick(sphSystem, dt);
+    leapfrogFullDrift(sphSystem, dt);
+
+    leapfrogPredict(sphSystem, dt);
+    leapfrogFinalKick(sphSystem, dt);
+
+    AutoPasLog(INFO, "Iteration {} completed", step);
+  }
+
   LogParticlePositions(sphSystem);
 }
 

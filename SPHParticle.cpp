@@ -100,11 +100,15 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
 
   const std::array<double, 3> &getAcceleration() const { return _acc; }
 
+  const std::array<double, 3> &getVel_half() const { return _vel_half; }
+
   double getEngDot() const { return _energy_dot; }
 
   void setDensity(double density) { _density = density; }
 
   void setEnergy(double energy) { _energy = energy; }
+
+  void setVel_half(const std::array<double, 3> &vel_half) { SPHParticle::_vel_half = vel_half; }
 
   void calcPressure() {
     const double hcr = 1.4;
