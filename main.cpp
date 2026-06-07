@@ -111,10 +111,10 @@ void addEnteringParticles(AutoPasContainer &sphSystem, std::vector<Particle> &in
     for (auto dim = 0; dim < 3; dim++) {
       if (pos[dim] < boxMin[dim]) {
         // has to be smaller than boxMax
-        pos[dim] = std::min(std::nextafter(boxMax[dim], -1), pos[dim] + (boxMax[dim] - boxMin[dim]));
+        pos[dim] = std::min(std::nextafter(boxMax[dim], -1), boxMin[dim] + (boxMin[dim] - pos[dim]));
       } else if (pos[dim] >= boxMax[dim]) {
         // should at least be boxMin
-        pos[dim] = std::max(boxMin[dim], pos[dim] - (boxMax[dim] - boxMin[dim]));
+        pos[dim] = std::max(boxMin[dim], boxMax[dim] - (pos[dim] - boxMax[dim]));
       }
     }
     p.setR(pos);
