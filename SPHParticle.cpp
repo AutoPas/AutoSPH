@@ -104,6 +104,8 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
 
   double getEngDot() const { return _energy_dot; }
 
+  void setAcceleration(const std::array<double, 3> &acc) { _acc = acc; }
+
   void setDensity(double density) { _density = density; }
 
   void setEnergy(double energy) { _energy = energy; }

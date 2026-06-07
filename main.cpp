@@ -93,6 +93,14 @@ void leapfrogFinalKick(AutoPasContainer &sphSystem, const double dt) {
   }
 }
 
+void applyConstantForce(AutoPasContainer &sphSystem) {
+  using namespace autopas::utils::ArrayMath::literals;
+
+  for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
+    part->setAcceleration({100, 100, 0.0});
+  }
+}
+
 int main() {
   std::array<double, 3> boxMin({0., 0., 0.}), boxMax{};
   boxMax[0] = boxMax[1] = boxMax[2] = 1.;
@@ -128,6 +136,7 @@ int main() {
     leapfrogFullDrift(sphSystem, dt);
 
     leapfrogPredict(sphSystem, dt);
+    applyConstantForce(sphSystem);
     leapfrogFinalKick(sphSystem, dt);
 
     AutoPasLog(INFO, "Iteration {} completed", step);
