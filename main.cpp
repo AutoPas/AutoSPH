@@ -38,7 +38,7 @@ void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, const st
 
   // Set dt and end time
   *dt = .002;
-  *end_time = .012;
+  *end_time = .024;
 
   AutoPasLog(INFO, "Setup completed");
   AutoPasLog(INFO, "Number of particles: {}", i);
@@ -97,7 +97,29 @@ void applyConstantForce(AutoPasContainer &sphSystem) {
   using namespace autopas::utils::ArrayMath::literals;
 
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
-    part->setAcceleration({100, 100, 0.0});
+    part->setAcceleration({2e3, 1e3, 0.0});
+  }
+}
+
+void addEnteringParticles(AutoPasContainer &sphSystem, std::vector<Particle> &invalidParticles) {
+  std::array<double, 3> boxMin = sphSystem.getBoxMin();
+  std::array<double, 3> boxMax = sphSystem.getBoxMax();
+
+  for (auto &p : invalidParticles) {
+    // first we have to correct the position of the particles, s.t. they lie inside of the box.
+    auto pos = p.getR();
+    for (auto dim = 0; dim < 3; dim++) {
+      if (pos[dim] < boxMin[dim]) {
+        // has to be smaller than boxMax
+        pos[dim] = std::min(std::nextafter(boxMax[dim], -1), pos[dim] + (boxMax[dim] - boxMin[dim]));
+      } else if (pos[dim] >= boxMax[dim]) {
+        // should at least be boxMin
+        pos[dim] = std::max(boxMin[dim], pos[dim] - (boxMax[dim] - boxMin[dim]));
+      }
+    }
+    p.setR(pos);
+    // add moved particles again
+    sphSystem.addParticle(p);
   }
 }
 
@@ -134,6 +156,9 @@ int main() {
   for (double time = 0.; time < t_end; time += dt, ++step) {
     leapfrogInitialKick(sphSystem, dt);
     leapfrogFullDrift(sphSystem, dt);
+
+    auto invalidParticles = sphSystem.updateContainer();
+    addEnteringParticles(sphSystem, invalidParticles);
 
     leapfrogPredict(sphSystem, dt);
     applyConstantForce(sphSystem);
