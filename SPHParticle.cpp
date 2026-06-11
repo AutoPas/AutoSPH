@@ -112,6 +112,8 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
 
   void setVel_half(const std::array<double, 3> &vel_half) { SPHParticle::_vel_half = vel_half; }
 
+  void addDensity(double density) { _density += density; }
+
   void calcPressure() {
     const double hcr = 1.4;
     _pressure = (hcr - 1.0) * _density * _energy;
