@@ -1,5 +1,6 @@
 #pragma once
 
+#include "SPHKernels.h"
 #include "autopas/baseFunctors/PairwiseFunctor.h"
 
 template <class Particle_T>
@@ -32,12 +33,12 @@ class DensityFunctor : public autopas::PairwiseFunctor<Particle_T, DensityFuncto
     }
     const std::array<double, 3> dr = j.getR() - i.getR();  // ep_j[j].pos - ep_i[i].pos;
     const double density =
-        j.getMass();// * SPHKernels::W(dr, i.getSmoothingLength());  // ep_j[j].mass * W(dr, ep_i[i].smth)
+        j.getMass() * SPHKernels::W(dr, i.getSmoothingLength());  // ep_j[j].mass * W(dr, ep_i[i].smth)
     i.addDensity(density);
     if (newton3) {
       // Newton 3:
       // W is symmetric in dr, so no -dr needed, i.e. we can reuse dr
-      const double density2 = i.getMass();// * SPHKernels::W(dr, j.getSmoothingLength());
+      const double density2 = i.getMass() * SPHKernels::W(dr, j.getSmoothingLength());
       j.addDensity(density2);
     }
   }
