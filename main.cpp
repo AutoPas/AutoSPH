@@ -60,36 +60,12 @@ void LogParticlePositions(AutoPasContainer &sphSystem) {
   }
 }
 
-void leapfrogInitialKick(AutoPasContainer &sphSystem, const double dt) {
-  using namespace autopas::utils::ArrayMath::literals;
-
-  for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
-    part->setVel_half(part->getV() + (part->getAcceleration() * (0.5 * dt)));
-  }
-}
-
-void leapfrogFullDrift(AutoPasContainer &sphSystem, const double dt) {
-  using namespace autopas::utils::ArrayMath::literals;
-
-  // time becomes t + dt;
-  for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
-    part->addR(part->getVel_half() * dt);
-  }
-}
-
-void leapfrogPredict(AutoPasContainer &sphSystem, const double dt) {
+void eulerStep(AutoPasContainer &sphSystem, const double dt) {
   using namespace autopas::utils::ArrayMath::literals;
 
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
     part->addV(part->getAcceleration() * dt);
-  }
-}
-
-void leapfrogFinalKick(AutoPasContainer &sphSystem, const double dt) {
-  using namespace autopas::utils::ArrayMath::literals;
-
-  for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
-    part->setV(part->getVel_half() + (part->getAcceleration() * (0.5 * dt)));
+    part->addR(part->getV() * dt);
   }
 }
 
@@ -157,15 +133,12 @@ int main() {
 
   size_t step = 0;
   for (double time = 0.; time < t_end; time += dt, ++step) {
-    leapfrogInitialKick(sphSystem, dt);
-    leapfrogFullDrift(sphSystem, dt);
+    eulerStep(sphSystem, dt);
 
     auto invalidParticles = sphSystem.updateContainer();
     addEnteringParticles(sphSystem, invalidParticles);
 
-    leapfrogPredict(sphSystem, dt);
     applyConstantForce(sphSystem);
-    leapfrogFinalKick(sphSystem, dt);
 
     AutoPasLog(INFO, "Iteration {} completed", step);
   }
