@@ -144,6 +144,9 @@ int main() {
                                                        autopas::ContainerOption::verletListsCells};
   sphSystem.setAllowedContainers(allowedContainers);
 
+  std::set<autopas::DataLayoutOption> allowedDataLayouts{autopas::DataLayoutOption::aos};
+  sphSystem.setAllowedDataLayouts(allowedDataLayouts);
+
   sphSystem.init();
 
   double dt;
