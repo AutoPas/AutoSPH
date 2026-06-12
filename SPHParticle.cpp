@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "autopas/particles/ParticleDefinitions.h"
+#include "autopas/utils/ArrayMath.h"
 
 /**
  * Basic SPHParticle class.
@@ -112,7 +113,25 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
 
   void setVel_half(const std::array<double, 3> &vel_half) { SPHParticle::_vel_half = vel_half; }
 
+  void setVSigMax(double v_sig_max) { _v_sig_max = v_sig_max; }
+
+  void setEngDot(double eng_dot) { _energy_dot = eng_dot; }
+
   void addDensity(double density) { _density += density; }
+
+  void addAcceleration(const std::array<double, 3> &acc) {
+    using namespace autopas::utils::ArrayMath::literals;
+    _acc += acc;
+  }
+
+  void subAcceleration(const std::array<double, 3> &acc) {
+    using namespace autopas::utils::ArrayMath::literals;
+    _acc -= acc;
+  }
+
+  void addEngDot(double eng_dot) { _energy_dot += eng_dot; }
+
+  void checkAndSetVSigMax(double v_sig) { _v_sig_max = std::max(v_sig, _v_sig_max); }
 
   void calcPressure() {
     const double hcr = 1.4;

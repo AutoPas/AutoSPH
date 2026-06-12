@@ -14,6 +14,7 @@
 // #include "autopas/particles/ParticleDefinitions.h"
 #include "SPHParticle.cpp"
 #include "DensityFunctor.h"
+#include "HydroForceFunctor.h"
 
 using Particle = SPHParticle;
 using AutoPasContainer = autopas::AutoPas<Particle>;
@@ -79,7 +80,6 @@ void applyConstantForce(AutoPasContainer &sphSystem) {
 }
 
 void calculateDensity(AutoPasContainer &sphSystem) {
-
   DensityFunctor<Particle> densityFunctor;
 
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
@@ -97,8 +97,20 @@ void updatePressure(AutoPasContainer &sphSystem) {
   }
 }
 
-// void calculateHydroForce(AutoPasContainer &sphSystem) {
-// }
+void calculateHydroForce(AutoPasContainer &sphSystem) {
+  HydroForceFunctor<Particle> hydroForceFunctor;
+
+  for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
+    // self interaction leeds to:
+    // 1) vsigmax = 2*part->getSoundSpeed()
+    // 2) no change in acceleration
+    part->setVSigMax(2 * part->getSoundSpeed());
+    part->setAcceleration(std::array<double, 3>{0., 0., 0.});
+    part->setEngDot(0.);
+  }
+
+  sphSystem.computeInteractions(&hydroForceFunctor);
+}
 
 void addEnteringParticles(AutoPasContainer &sphSystem, std::vector<Particle> &invalidParticles) {
   std::array<double, 3> boxMin = sphSystem.getBoxMin();
@@ -159,6 +171,7 @@ int main() {
   for (double time = 0.; time < t_end; time += dt, ++step) {
     calculateDensity(sphSystem);
     updatePressure(sphSystem);
+    calculateHydroForce(sphSystem);
 
     eulerStep(sphSystem, dt);
 
