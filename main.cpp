@@ -25,11 +25,11 @@ void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, const st
   // Place SPH particles
   AutoPasLog(INFO, "Setup started");
 
-  const double dx = 1.0 / 2.0;
+  const double dx = .01 / 2.0;
   unsigned int i = 0;
-  for (double x = 0; x < bBoxMax[0]; x += dx) {         // NOLINT
-    for (double y = 0; y < bBoxMax[1]; y += dx) {       // NOLINT
-      for (double z = 0; z < bBoxMax[2]; z += dx) {     // NOLINT
+  for (double x = 0; x < bBoxMax[0]/100; x += dx) {         // NOLINT
+    for (double y = 0; y < bBoxMax[1]/100; y += dx) {       // NOLINT
+      for (double z = 0; z < bBoxMax[2]/100; z += dx) {     // NOLINT
         Particle ith({x, y, z}, {0, 0, 0}, i++, 0.75, 0.012, 0.);
         ith.setDensity(1.0);
         ith.setEnergy(2.5);
