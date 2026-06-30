@@ -14,6 +14,7 @@
 #include "SPHParticle.cpp"
 #include "DensityFunctor.h"
 #include "HydroForceFunctor.h"
+#include "SimpleVtkWriter.h"
 
 using Particle = SPHParticle;
 using AutoPasContainer = autopas::AutoPas<Particle>;
@@ -170,6 +171,9 @@ int main() {
   Initialize(sphSystem);
   LogParticlePositions(sphSystem);
 
+  SimpleVtkWriter vtkWriter("serial_test_run", "./output", 4);
+  // vtkWriter.recordTimestep(0, sphSystem, boxMin, boxMax);
+
   applyConstantForce(sphSystem);
   size_t step = 0;
   for (double time = 0.; time < t_end; time += dt, ++step) {
@@ -184,6 +188,7 @@ int main() {
     addEnteringParticles(sphSystem, invalidParticles);
 
     AutoPasLog(INFO, "Iteration {} completed", step);
+    vtkWriter.recordTimestep(step, sphSystem, boxMin, boxMax);
   }
 
   LogParticlePositions(sphSystem);
