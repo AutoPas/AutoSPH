@@ -11,15 +11,12 @@
 #include <iostream>
 
 #include "autopas/AutoPas.h"
-// #include "autopas/particles/ParticleDefinitions.h"
 #include "SPHParticle.cpp"
 #include "DensityFunctor.h"
 #include "HydroForceFunctor.h"
 
 using Particle = SPHParticle;
 using AutoPasContainer = autopas::AutoPas<Particle>;
-
-// using AutoPasContainer = autopas::AutoPas<autopas::ParticleBaseFP64>;
 
 void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, const std::array<double, 3> &bBoxMax) {
   // Place SPH particles
@@ -112,6 +109,12 @@ void calculateHydroForce(AutoPasContainer &sphSystem) {
   sphSystem.computeInteractions(&hydroForceFunctor);
 }
 
+void addGravity(AutoPasContainer &sphSystem, const std::array<double, 3> &gravity) {
+  for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
+    part->addAcceleration(gravity);
+  }
+}
+
 void addEnteringParticles(AutoPasContainer &sphSystem, std::vector<Particle> &invalidParticles) {
   std::array<double, 3> boxMin = sphSystem.getBoxMin();
   std::array<double, 3> boxMax = sphSystem.getBoxMax();
@@ -140,6 +143,7 @@ int main() {
   double cutoff = 0.03;               // 0.012*2.5=0.03; where 2.5 = kernel support radius
   unsigned int rebuildFrequency = 6;  // has to be multiple of two, as there are two functor calls per iteration.
   double skinToCutoffRatio = 0.15;
+  std::array<double, 3> gravity({0., 0., -9.81});
 
   AutoPasContainer sphSystem;
   sphSystem.setNumSamples(
@@ -172,6 +176,7 @@ int main() {
     calculateDensity(sphSystem);
     updatePressure(sphSystem);
     calculateHydroForce(sphSystem);
+    addGravity(sphSystem, gravity);
 
     eulerStep(sphSystem, dt);
 
