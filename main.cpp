@@ -37,8 +37,8 @@ void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, const st
   }
 
   // Set dt and end time
-  *dt = .002;
-  *end_time = .7;
+  *dt = .005;
+  *end_time = 1;
 
   AutoPasLog(INFO, "Setup completed");
   AutoPasLog(INFO, "Number of particles: {}", i);
@@ -123,16 +123,20 @@ void addEnteringParticles(AutoPasContainer &sphSystem, std::vector<Particle> &in
   for (auto &p : invalidParticles) {
     // first we have to correct the position of the particles, s.t. they lie inside of the box.
     auto pos = p.getR();
+    auto vel = p.getV();
     for (auto dim = 0; dim < 3; dim++) {
       if (pos[dim] < boxMin[dim]) {
         // has to be smaller than boxMax
         pos[dim] = std::min(std::nextafter(boxMax[dim], -1), boxMin[dim] + (boxMin[dim] - pos[dim]));
+        vel[dim] *= -.7; // -1 would be a perfectly reflective boundary, -0.7 is used as damping
       } else if (pos[dim] >= boxMax[dim]) {
         // should at least be boxMin
         pos[dim] = std::max(boxMin[dim], boxMax[dim] - (pos[dim] - boxMax[dim]));
+        vel[dim] *= -.7;
       }
     }
     p.setR(pos);
+    p.setV(vel);
     // add moved particles again
     sphSystem.addParticle(p);
   }
