@@ -23,9 +23,9 @@ void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, const st
   // Place SPH particles
   AutoPasLog(INFO, "Setup started");
 
-  const double i_box = .1;
+  const double i_box = 1;
   const int part_num = 25;
-  const double dx = i_box / part_num;
+  const double dx = bBoxMax[0] * i_box / part_num;
   unsigned int i = 0;
   for (double x = 0; x < bBoxMax[0]*i_box; x += dx) {         // NOLINT
     for (double y = bBoxMax[1] - bBoxMax[1] * i_box; y < bBoxMax[1]; y += dx) {       // NOLINT
@@ -130,11 +130,11 @@ void addEnteringParticles(AutoPasContainer &sphSystem, std::vector<Particle> &in
       if (pos[dim] < boxMin[dim]) {
         // has to be smaller than boxMax
         pos[dim] = std::min(std::nextafter(boxMax[dim], -1), boxMin[dim] + (boxMin[dim] - pos[dim]));
-        vel[dim] *= -.7; // -1 would be a perfectly reflective boundary, -0.7 is used as damping
+        vel[dim] *= -.5; // -1 would be a perfectly reflective boundary, decimal used as damping
       } else if (pos[dim] >= boxMax[dim]) {
         // should at least be boxMin
         pos[dim] = std::max(boxMin[dim], boxMax[dim] - (pos[dim] - boxMax[dim]));
-        vel[dim] *= -.7;
+        vel[dim] *= -.5;
       }
     }
     p.setR(pos);
@@ -146,7 +146,7 @@ void addEnteringParticles(AutoPasContainer &sphSystem, std::vector<Particle> &in
 
 int main() {
   std::array<double, 3> boxMin({0., 0., 0.}), boxMax{};
-  boxMax[0] = boxMax[1] = boxMax[2] = 1.;
+  boxMax[0] = boxMax[1] = boxMax[2] = .25;
   double cutoff = 0.03;               // 0.012*2.5=0.03; where 2.5 = kernel support radius
   unsigned int rebuildFrequency = 6;  // has to be multiple of two, as there are two functor calls per iteration.
   double skinToCutoffRatio = 0.15;
