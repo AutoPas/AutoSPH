@@ -19,19 +19,22 @@
 using Particle = SPHParticle;
 using AutoPasContainer = autopas::AutoPas<Particle>;
 
-void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, const std::array<double, 3> &bBoxMax) {
+void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, double density, const std::array<double, 3> &bBoxMax) {
   // Place SPH particles
   AutoPasLog(INFO, "Setup started");
 
-  const double i_box = 1;
+  const double i_box = 0.5;
   const int part_num = 25;
-  const double dx = bBoxMax[0] * i_box / part_num;
+  const double part_cube_size = bBoxMax[0] * i_box;
+  const double dx = part_cube_size / part_num;
+  const double total_mass = part_cube_size * part_cube_size * part_cube_size * density;
+  const double part_mass = total_mass / (part_num * part_num * part_num);
   unsigned int i = 0;
   for (double x = 0; x < bBoxMax[0]*i_box; x += dx) {         // NOLINT
     for (double y = bBoxMax[1] - bBoxMax[1] * i_box; y < bBoxMax[1]; y += dx) {       // NOLINT
       for (double z = 0; z < bBoxMax[2]*i_box; z += dx) {     // NOLINT
-        Particle ith({x, y, z}, {0, 0, 0}, i++, 0.75, 0.012, 0.);
-        ith.setDensity(1.0);
+        Particle ith({x, y, z}, {0, 0, 0}, i++, part_mass, 0.012, 0.);
+        ith.setDensity(density);
         ith.setEnergy(2.5);
         sphSystem.addParticle(ith);
       }
@@ -46,10 +49,10 @@ void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, const st
   AutoPasLog(INFO, "Number of particles: {}", i);
 }
 
-void Initialize(AutoPasContainer &sphSystem) {
+void Initialize(AutoPasContainer &sphSystem, double density_0) {
   AutoPasLog(INFO, "Initialization started");
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
-    part->calcPressure();
+    part->calcPressure(density_0);
   }
   AutoPasLog(INFO, "Initialization completed");
 }
@@ -91,9 +94,9 @@ void calculateDensity(AutoPasContainer &sphSystem) {
   sphSystem.computeInteractions(&densityFunctor);
 }
 
-void updatePressure(AutoPasContainer &sphSystem) {
+void updatePressure(AutoPasContainer &sphSystem, double density_0) {
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
-    part->calcPressure();
+    part->calcPressure(density_0);
   }
 }
 
@@ -151,6 +154,7 @@ int main() {
   unsigned int rebuildFrequency = 6;  // has to be multiple of two, as there are two functor calls per iteration.
   double skinToCutoffRatio = 0.15;
   std::array<double, 3> gravity({0., -10., 0});
+  double density = 1.0;
 
   AutoPasContainer sphSystem;
   sphSystem.setNumSamples(
@@ -173,8 +177,8 @@ int main() {
 
   double dt;
   double t_end;
-  SetupIC(sphSystem, &dt, &t_end, boxMax);
-  Initialize(sphSystem);
+  SetupIC(sphSystem, &dt, &t_end, density, boxMax);
+  Initialize(sphSystem, density);
   // LogParticlePositions(sphSystem);
 
   SimpleVtkWriter vtkWriter("serial_test_run", "./output", 4);
@@ -183,7 +187,7 @@ int main() {
   size_t step = 0;
   for (double time = 0.; time < t_end; time += dt, ++step) {
     calculateDensity(sphSystem);
-    updatePressure(sphSystem);
+    updatePressure(sphSystem, density);
     calculateHydroForce(sphSystem);
     addGravity(sphSystem, gravity);
 
