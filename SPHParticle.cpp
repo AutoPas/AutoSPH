@@ -133,10 +133,9 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
 
   void checkAndSetVSigMax(double v_sig) { _v_sig_max = std::max(v_sig, _v_sig_max); }
 
-  void calcPressure() {
-    const double hcr = 1.4;
-    _pressure = (hcr - 1.0) * _density * _energy;
-    _snds = sqrt(hcr * _pressure / _density);
+  void calcPressure(double density_0) {
+    if (_density <= 0.0) return;
+    _pressure = _snds * _snds * (_density - density_0);
   }
 
   /**

@@ -33,7 +33,7 @@ void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, double d
   for (double x = 0; x < bBoxMax[0]*i_box; x += dx) {         // NOLINT
     for (double y = bBoxMax[1] - bBoxMax[1] * i_box; y < bBoxMax[1]; y += dx) {       // NOLINT
       for (double z = 0; z < bBoxMax[2]*i_box; z += dx) {     // NOLINT
-        Particle ith({x, y, z}, {0, 0, 0}, i++, part_mass, 0.012, 0.);
+        Particle ith({x, y, z}, {0, 0, 0}, i++, part_mass, 0.012, 20.0);
         ith.setDensity(density);
         ith.setEnergy(2.5);
         sphSystem.addParticle(ith);
@@ -42,8 +42,8 @@ void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, double d
   }
 
   // Set dt and end time
-  *dt = .005;
-  *end_time = 1;
+  *dt = .0001;
+  *end_time = .5;
 
   AutoPasLog(INFO, "Setup completed");
   AutoPasLog(INFO, "Number of particles: {}", i);
@@ -154,7 +154,7 @@ int main() {
   unsigned int rebuildFrequency = 6;  // has to be multiple of two, as there are two functor calls per iteration.
   double skinToCutoffRatio = 0.15;
   std::array<double, 3> gravity({0., -10., 0});
-  double density = 1.0;
+  double density = 1000.0;
 
   AutoPasContainer sphSystem;
   sphSystem.setNumSamples(
@@ -179,6 +179,7 @@ int main() {
   double t_end;
   SetupIC(sphSystem, &dt, &t_end, density, boxMax);
   Initialize(sphSystem, density);
+  const int record_freq = static_cast<int>(std::round(0.005 / dt));
   // LogParticlePositions(sphSystem);
 
   SimpleVtkWriter vtkWriter("serial_test_run", "./output", 4);
@@ -197,7 +198,10 @@ int main() {
     addEnteringParticles(sphSystem, invalidParticles);
 
     AutoPasLog(INFO, "Iteration {} completed", step);
-    vtkWriter.recordTimestep(step, sphSystem, boxMin, boxMax);
+    if (step % record_freq == 0) {
+      std::cout << "recorded timestep" << step << std::endl;
+      vtkWriter.recordTimestep(step, sphSystem, boxMin, boxMax);
+    }
   }
 
   // LogParticlePositions(sphSystem);

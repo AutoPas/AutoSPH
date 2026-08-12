@@ -34,7 +34,7 @@ class HydroForceFunctor : public autopas::PairwiseFunctor<Particle_T, HydroForce
     const std::array<double, 3> dr = i.getR() - j.getR();
     // const PS::F64vec dr = ep_i[i].pos - ep_j[j].pos;
 
-    double cutoff = i.getSmoothingLength();// * sphLib::SPHKernels::getKernelSupportRadius();
+    double cutoff = i.getSmoothingLength() * 2.5;// * sphLib::SPHKernels::getKernelSupportRadius();
 
     if (autopas::utils::ArrayMath::dot(dr, dr) >= cutoff * cutoff) {
       return;
