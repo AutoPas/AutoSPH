@@ -24,7 +24,7 @@ void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, double d
   AutoPasLog(INFO, "Setup started");
 
   const double i_box = 0.5;
-  const int part_num = 25;
+  const int part_num = 15;
   const double part_cube_size = bBoxMax[0] * i_box;
   const double dx = part_cube_size / part_num;
   const double total_mass = part_cube_size * part_cube_size * part_cube_size * density;
@@ -32,6 +32,7 @@ void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, double d
   unsigned int i = 0;
   for (double x = 0; x < bBoxMax[0]*i_box; x += dx) {         // NOLINT
     for (double y = bBoxMax[1] - bBoxMax[1] * i_box; y < bBoxMax[1]; y += dx) {       // NOLINT
+    // for (double y = 0; y < bBoxMax[1]*i_box; y += dx) {       // NOLINT
       for (double z = 0; z < bBoxMax[2]*i_box; z += dx) {     // NOLINT
         Particle ith({x, y, z}, {0, 0, 0}, i++, part_mass, 0.012, 20.0);
         ith.setDensity(density);
@@ -42,8 +43,8 @@ void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, double d
   }
 
   // Set dt and end time
-  *dt = .0001;
-  *end_time = .5;
+  *dt = .0002;
+  *end_time = 1;
 
   AutoPasLog(INFO, "Setup completed");
   AutoPasLog(INFO, "Number of particles: {}", i);
@@ -133,11 +134,11 @@ void addEnteringParticles(AutoPasContainer &sphSystem, std::vector<Particle> &in
       if (pos[dim] < boxMin[dim]) {
         // has to be smaller than boxMax
         pos[dim] = std::min(std::nextafter(boxMax[dim], -1), boxMin[dim] + (boxMin[dim] - pos[dim]));
-        vel[dim] *= -.5; // -1 would be a perfectly reflective boundary, decimal used as damping
+        vel[dim] *= -.9; // -1 would be a perfectly reflective boundary, decimal used as damping
       } else if (pos[dim] >= boxMax[dim]) {
         // should at least be boxMin
         pos[dim] = std::max(boxMin[dim], boxMax[dim] - (pos[dim] - boxMax[dim]));
-        vel[dim] *= -.5;
+        vel[dim] *= -.9;
       }
     }
     p.setR(pos);
@@ -197,9 +198,8 @@ int main() {
     auto invalidParticles = sphSystem.updateContainer();
     addEnteringParticles(sphSystem, invalidParticles);
 
-    AutoPasLog(INFO, "Iteration {} completed", step);
     if (step % record_freq == 0) {
-      std::cout << "recorded timestep" << step << std::endl;
+      AutoPasLog(INFO, "Iteration {} completed", step);
       vtkWriter.recordTimestep(step, sphSystem, boxMin, boxMax);
     }
   }

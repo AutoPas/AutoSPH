@@ -55,7 +55,8 @@ class HydroForceFunctor : public autopas::PairwiseFunctor<Particle_T, HydroForce
       j.checkAndSetVSigMax(v_sig);  // Newton 3
       // v_sig_max = std::max(v_sig_max, v_sig);
     }
-    const double AV = -0.5 * v_sig * w_ij / (0.5 * (i.getDensity() + j.getDensity()));
+    const double alpha = .05;
+    const double AV = -alpha * v_sig * w_ij / (0.5 * (i.getDensity() + j.getDensity()));
     // const PS::F64 AV = - 0.5 * v_sig * w_ij / (0.5 * (ep_i[i].dens +
     // ep_j[j].dens));
 

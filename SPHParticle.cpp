@@ -135,7 +135,7 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
 
   void calcPressure(double density_0) {
     if (_density <= 0.0) return;
-    _pressure = _snds * _snds * (_density - density_0);
+    _pressure = std::max(0.0, _snds * _snds * (_density - density_0));
   }
 
   /**
