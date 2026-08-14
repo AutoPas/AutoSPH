@@ -30,10 +30,10 @@ void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, double d
   const double total_mass = part_cube_size * part_cube_size * part_cube_size * density;
   const double part_mass = total_mass / (part_num * part_num * part_num);
   unsigned int i = 0;
-  for (double x = 0; x < bBoxMax[0]*i_box; x += dx) {         // NOLINT
-    for (double y = bBoxMax[1] - bBoxMax[1] * i_box; y < bBoxMax[1]; y += dx) {       // NOLINT
+  for (double x = dx; x < bBoxMax[0]*i_box; x += dx) {         // NOLINT
+    for (double y = bBoxMax[1] - bBoxMax[1] * i_box; y < bBoxMax[1] - dx; y += dx) {       // NOLINT
     // for (double y = 0; y < bBoxMax[1]*i_box; y += dx) {       // NOLINT
-      for (double z = 0; z < bBoxMax[2]*i_box; z += dx) {     // NOLINT
+      for (double z = dx; z < bBoxMax[2]*i_box; z += dx) {     // NOLINT
         Particle ith({x, y, z}, {0, 0, 0}, i++, part_mass, 0.012, 20.0);
         ith.setDensity(density);
         ith.setEnergy(2.5);
@@ -48,6 +48,7 @@ void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, double d
 
   AutoPasLog(INFO, "Setup completed");
   AutoPasLog(INFO, "Number of particles: {}", i);
+  AutoPasLog(INFO, "Number of particles: {}", sphSystem.getNumberOfParticles());
 }
 
 void Initialize(AutoPasContainer &sphSystem, double density_0) {
@@ -236,13 +237,14 @@ int main() {
 
     eulerStep(sphSystem, dt);
 
-    auto invalidParticles = sphSystem.updateContainer();
-    addEnteringParticles(sphSystem, invalidParticles);
-
     if (step % record_freq == 0) {
       AutoPasLog(INFO, "Iteration {} completed", step);
+      AutoPasLog(INFO, "Number of particles: {}", sphSystem.getNumberOfParticles(autopas::IteratorBehavior::ownedOrHalo));
       vtkWriter.recordTimestep(step, sphSystem, boxMin, boxMax);
     }
+
+    auto invalidParticles = sphSystem.updateContainer();
+    addEnteringParticles(sphSystem, invalidParticles);
   }
 
   // LogParticlePositions(sphSystem);
