@@ -122,6 +122,45 @@ void addGravity(AutoPasContainer &sphSystem, const std::array<double, 3> &gravit
   }
 }
 
+void generateGhostParticles(AutoPasContainer &sphSystem, double cutoff) {
+  std::vector<Particle> ghosts;
+  std::array<double, 3> boxMin = sphSystem.getBoxMin();
+  std::array<double, 3> boxMax = sphSystem.getBoxMax();
+  bool needs_ghost;
+  double min_d;
+  double max_d;
+
+  for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
+    auto pos = part->getR();
+    auto vel = part->getV();
+
+    for (auto dim = 0; dim < 3; dim++) {
+      needs_ghost = false;
+      min_d = pos[dim] - boxMin[dim];
+      max_d = boxMax[dim] - pos[dim];
+      if (min_d < cutoff & min_d > 0) {
+        needs_ghost = true;
+        pos[dim] = -min_d; // Mirrored position
+        vel[dim] = -vel[dim]; // Reverse normal velocity (no-slip)
+      } else if (max_d < cutoff & max_d > 0) {
+        needs_ghost = true;
+        pos[dim] = boxMax[dim] + max_d; // Mirrored position
+        vel[dim] = -vel[dim]; // Reverse normal velocity (no-slip)
+      }
+      if (needs_ghost){
+        Particle ghost = *part;
+        ghost.setR(pos);
+        ghost.setV(vel);
+        ghost.setIsBoundary(true);
+        ghosts.push_back(ghost);
+      }
+    }
+  }
+  for (auto &g : ghosts) {
+    sphSystem.addHaloParticle(g);
+  }
+}
+
 void addEnteringParticles(AutoPasContainer &sphSystem, std::vector<Particle> &invalidParticles) {
   std::array<double, 3> boxMin = sphSystem.getBoxMin();
   std::array<double, 3> boxMax = sphSystem.getBoxMax();
@@ -188,6 +227,8 @@ int main() {
   applyConstantForce(sphSystem);
   size_t step = 0;
   for (double time = 0.; time < t_end; time += dt, ++step) {
+    generateGhostParticles(sphSystem, cutoff);
+
     calculateDensity(sphSystem);
     updatePressure(sphSystem, density);
     calculateHydroForce(sphSystem);

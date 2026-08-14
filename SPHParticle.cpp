@@ -105,6 +105,10 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
 
   double getEngDot() const { return _energy_dot; }
 
+  bool isBoundary() const { return _isBoundary; }
+
+  void setIsBoundary(bool isBoundary) { _isBoundary = isBoundary; }
+
   void setAcceleration(const std::array<double, 3> &acc) { _acc = acc; }
 
   void setDensity(double density) { _density = density; }
@@ -281,4 +285,6 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
   // integrator
   std::array<double, 3> _vel_half;  // velocity at half time-step
   double _eng_half;                 // energy at half time-step
+
+  bool _isBoundary = false;
 };
