@@ -20,10 +20,10 @@ public:
         : _sessionName(std::move(sessionName)), 
           _outputFolder(std::move(outputFolder)), 
           _maxDigits(maxDigits) {
-        
+
         _sessionFolderPath = _outputFolder + "/" + _sessionName + "/";
         _dataFolderPath = _sessionFolderPath + "data/";
-        
+
         tryCreateFolder(_outputFolder, "./");
         tryCreateFolder(_sessionName, _outputFolder);
         tryCreateFolder("data", _sessionFolderPath);
@@ -34,7 +34,7 @@ public:
                         const autopas::AutoPas<ParticleType> &autoPasContainer,
                         const std::array<double, 3>& boxMin,
                         const std::array<double, 3>& boxMax) const {
-        
+
         recordParticleStates(currentIteration, autoPasContainer);
         recordDomainSubdivision(currentIteration, boxMin, boxMax);
     }
@@ -67,13 +67,16 @@ private:
         file << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n"
              << "<VTKFile byte_order=\"LittleEndian\" type=\"PUnstructuredGrid\" version=\"0.1\">\n"
              << "  <PUnstructuredGrid GhostLevel=\"0\">\n";
-        
+
         if (isParticle) {
             file << "    <PPointData>\n"
                  << "      <PDataArray Name=\"velocities\" NumberOfComponents=\"3\" format=\"ascii\" type=\"Float32\"/>\n"
                  << "      <PDataArray Name=\"forces\" NumberOfComponents=\"3\" format=\"ascii\" type=\"Float32\"/>\n"
                  // << "      <PDataArray Name=\"typeIds\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Int32\"/>\n"
                  << "      <PDataArray Name=\"ids\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Int32\"/>\n"
+                 << "      <PDataArray Name=\"density\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Float32\"/>\n"
+                 << "      <PDataArray Name=\"mass\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Float32\"/>\n"
+                 << "      <PDataArray Name=\"smoothing_length\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Float32\"/>\n"
                  << "    </PPointData>\n"
                  << "    <PPoints><PDataArray Name=\"positions\" NumberOfComponents=\"3\" format=\"ascii\" type=\"Float32\"/></PPoints>\n";
         } else {
@@ -124,6 +127,18 @@ private:
 
         file << "        <DataArray Name=\"ids\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Int32\">\n";
         for (auto p = container.begin(autopas::IteratorBehavior::owned); p.isValid(); ++p) { file << "        " << p->getID() << "\n"; }
+        file << "        </DataArray>\n";
+
+        file << "        <DataArray Name=\"density\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Float32\">\n";
+        for (auto p = container.begin(autopas::IteratorBehavior::owned); p.isValid(); ++p) { file << "        " << p->getDensity() << "\n"; }
+        file << "        </DataArray>\n";
+
+        file << "        <DataArray Name=\"mass\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Float32\">\n";
+        for (auto p = container.begin(autopas::IteratorBehavior::owned); p.isValid(); ++p) { file << "        " << p->getMass() << "\n"; }
+        file << "        </DataArray>\n";
+
+        file << "        <DataArray Name=\"smoothing_length\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Float32\">\n";
+        for (auto p = container.begin(autopas::IteratorBehavior::owned); p.isValid(); ++p) { file << "        " << p->getSmoothingLength() << "\n"; }
         file << "        </DataArray>\n";
 
         file << "      </PointData>\n<CellData/>\n<Points>\n"
