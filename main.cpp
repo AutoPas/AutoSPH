@@ -24,16 +24,16 @@ void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, double d
   AutoPasLog(INFO, "Setup started");
 
   const double i_box = 0.5;
-  const int part_num = 15;
+  const int part_num = 12;
   const double part_cube_size = bBoxMax[0] * i_box;
-  const double dx = part_cube_size / part_num;
-  const double total_mass = part_cube_size * part_cube_size * part_cube_size * density;
+  const double dx = bBoxMax[2] / (2 * part_num + 2);
+  const double total_mass = 0.10 * bBoxMax[0] * bBoxMax[1] * bBoxMax[2] * density;
   const double part_mass = total_mass / (part_num * part_num * part_num);
   unsigned int i = 0;
-  for (double x = dx; x < bBoxMax[0]*i_box; x += dx) {         // NOLINT
-    for (double y = bBoxMax[1] - bBoxMax[1] * i_box; y < bBoxMax[1] - dx; y += dx) {       // NOLINT
-    // for (double y = 0; y < bBoxMax[1]*i_box; y += dx) {       // NOLINT
-      for (double z = dx; z < bBoxMax[2]*i_box; z += dx) {     // NOLINT
+  for (double x = dx; x < bBoxMax[0]*0.25; x += dx) {         // NOLINT
+    // for (double y = bBoxMax[1] - bBoxMax[1] * i_box; y < bBoxMax[1] - dx; y += dx) {       // NOLINT
+    for (double y = dx; y < bBoxMax[1]*0.5; y += dx) {       // NOLINT
+      for (double z = dx; z < bBoxMax[2] - dx; z += dx) {     // NOLINT
         Particle ith({x, y, z}, {0, 0, 0}, i++, part_mass, 0.012, 20.0);
         ith.setDensity(density);
         ith.setEnergy(2.5);
@@ -47,7 +47,7 @@ void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, double d
   *end_time = 1;
 
   AutoPasLog(INFO, "Setup completed");
-  AutoPasLog(INFO, "Number of particles: {}", i);
+  AutoPasLog(INFO, "Number of particles (i): {}", i);
   AutoPasLog(INFO, "Number of particles: {}", sphSystem.getNumberOfParticles());
 }
 
