@@ -26,14 +26,17 @@ void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, double d
   const double i_box = 0.5;
   const int part_num = 12;
   const double part_cube_size = bBoxMax[0] * i_box;
-  const double dx = bBoxMax[2] / (2 * part_num + 2);
-  const double total_mass = 0.10 * bBoxMax[0] * bBoxMax[1] * bBoxMax[2] * density;
+  const double dx = bBoxMax[2] / (2 * part_num + 1);
+  const double dim0 = bBoxMax[0] * 0.25 - dx - std::fmod(bBoxMax[0] * 0.25, dx);
+  const double dim1 = bBoxMax[1] * 0.5 - dx - std::fmod(bBoxMax[0] * 0.5, dx);
+  const double dim2 = bBoxMax[2] - 2 * dx;
+  const double total_mass =  dim0 * dim1 * dim2 * density;
   const double part_mass = total_mass / (part_num * part_num * part_num);
   unsigned int i = 0;
   for (double x = dx; x < bBoxMax[0]*0.25; x += dx) {         // NOLINT
     // for (double y = bBoxMax[1] - bBoxMax[1] * i_box; y < bBoxMax[1] - dx; y += dx) {       // NOLINT
     for (double y = dx; y < bBoxMax[1]*0.5; y += dx) {       // NOLINT
-      for (double z = dx; z < bBoxMax[2] - dx; z += dx) {     // NOLINT
+      for (double z = dx; z < bBoxMax[2]; z += dx) {     // NOLINT
         Particle ith({x, y, z}, {0, 0, 0}, i++, part_mass, 0.012, 20.0);
         ith.setDensity(density);
         ith.setEnergy(2.5);
