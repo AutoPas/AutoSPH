@@ -24,16 +24,16 @@ void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, double d
   AutoPasLog(INFO, "Setup started");
 
   const double i_box = 0.5;
-  const int part_num = 12;
+  const int part_num = 16;
   const double part_cube_size = bBoxMax[0] * i_box;
-  const double dx = bBoxMax[2] / (2 * part_num + 1);
-  const double dim0 = bBoxMax[0] * 0.25 - dx - std::fmod(bBoxMax[0] * 0.25, dx);
+  const double dx = bBoxMax[2] / (part_num + 1);
+  const double dim0 = bBoxMax[0] - 2 * dx;
   const double dim1 = bBoxMax[1] * 0.5 - dx - std::fmod(bBoxMax[0] * 0.5, dx);
   const double dim2 = bBoxMax[2] - 2 * dx;
   const double total_mass =  dim0 * dim1 * dim2 * density;
-  const double part_mass = total_mass / (part_num * part_num * part_num);
+  const double part_mass = total_mass / (part_num * part_num * part_num * 0.5);
   unsigned int i = 0;
-  for (double x = dx; x < bBoxMax[0]*0.25; x += dx) {         // NOLINT
+  for (double x = dx; x < bBoxMax[0]; x += dx) {         // NOLINT
     // for (double y = bBoxMax[1] - bBoxMax[1] * i_box; y < bBoxMax[1] - dx; y += dx) {       // NOLINT
     for (double y = dx; y < bBoxMax[1]*0.5; y += dx) {       // NOLINT
       for (double z = dx; z < bBoxMax[2]; z += dx) {     // NOLINT
@@ -47,7 +47,7 @@ void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, double d
 
   // Set dt and end time
   *dt = .0002;
-  *end_time = 1;
+  *end_time = 5;
 
   AutoPasLog(INFO, "Setup completed");
   AutoPasLog(INFO, "Number of particles (i): {}", i);
@@ -198,6 +198,7 @@ int main() {
   unsigned int rebuildFrequency = 6;  // has to be multiple of two, as there are two functor calls per iteration.
   double skinToCutoffRatio = 0.15;
   std::array<double, 3> gravity({0., -10., 0});
+  double slosh_acc = 5;
   double density = 1000.0;
 
   AutoPasContainer sphSystem;
@@ -226,7 +227,7 @@ int main() {
   const int record_freq = static_cast<int>(std::round(0.005 / dt));
   // LogParticlePositions(sphSystem);
 
-  SimpleVtkWriter vtkWriter("serial_test_run", "./output", 4);
+  SimpleVtkWriter vtkWriter("serial_test_run", "./output", 5);
 
   applyConstantForce(sphSystem);
   size_t step = 0;
@@ -244,6 +245,16 @@ int main() {
       AutoPasLog(INFO, "Iteration {} completed", step);
       AutoPasLog(INFO, "Number of particles: {}", sphSystem.getNumberOfParticles(autopas::IteratorBehavior::ownedOrHalo));
       vtkWriter.recordTimestep(step, sphSystem, boxMin, boxMax);
+
+      if (time > t_end * .8) {
+        gravity = {0., -10., 0};
+      } else if (time > t_end * .6) {
+        gravity = {slosh_acc, -10., 0};
+      } else if (time > t_end * .4) {
+        gravity = {0., -10., 0};
+      } else if (time > t_end * .2) {
+        gravity = {-slosh_acc, -10., 0};
+      }
     }
 
     auto invalidParticles = sphSystem.updateContainer();
