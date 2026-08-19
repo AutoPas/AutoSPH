@@ -12,11 +12,11 @@ using AutoPasContainer = autopas::AutoPas<SPHParticle>;
 
 class SPHConfig {
 private:
-    double timeStep;
-    double totalTime;
     double boxMaxX;
     double boxMaxY;
     double boxMaxZ;
+    double timeStep;
+    double totalTime;
     double cutoff;
     double skinToCutoffRatio;
     unsigned int rebuildFrequency;
@@ -29,12 +29,12 @@ public:
         try {
             YAML::Node config = YAML::LoadFile(filename);
 
-            timeStep = config["simulation"]["time_step"].as<double>();
-            totalTime = config["simulation"]["total_time"].as<double>();
-
             boxMaxX = config["simulation"]["BoxSize_X"].as<double>();
             boxMaxY = config["simulation"]["BoxSize_Y"].as<double>();
             boxMaxZ = config["simulation"]["BoxSize_Z"].as<double>();
+
+            timeStep = config["simulation"]["time_step"].as<double>();
+            totalTime = config["simulation"]["total_time"].as<double>();
 
             cutoff = config["simulation"]["cutoff"].as<double>();
             skinToCutoffRatio = config["simulation"]["skin_cutoff_ratio"].as<double>();
@@ -48,16 +48,21 @@ public:
         }
     }
 
-    double getTimeStep() const { return timeStep; }
-    double getTotalTime() const { return totalTime; }
-    double getBoxMaxX() const { return boxMaxX; }
-    double getBoxMaxY() const { return boxMaxY; }
-    double getBoxMaxZ() const { return boxMaxZ; }
+    void SetupContainer(AutoPasContainer &sphSystem, std::array<double, 3> &bBoxMin, std::array<double, 3> &bBoxMax, double *dt, double *t_end, double *_cutoff) {
+        bBoxMax[0] = boxMaxX;
+        bBoxMax[1] = boxMaxY;
+        bBoxMax[2] = boxMaxZ;
 
-    void SetupContainer(AutoPasContainer &sphSystem) {
+        sphSystem.setBoxMin(bBoxMin);
+        sphSystem.setBoxMax(bBoxMax);
+
         sphSystem.setNumSamples(numSamples);
         sphSystem.setCutoff(cutoff);
         sphSystem.setVerletSkin(skinToCutoffRatio * cutoff);
         sphSystem.setVerletRebuildFrequency(rebuildFrequency);
+
+        *dt = timeStep;
+        *t_end = totalTime;
+        *_cutoff = cutoff;
     }
 };

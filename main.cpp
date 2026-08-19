@@ -20,7 +20,7 @@
 using Particle = SPHParticle;
 using AutoPasContainer = autopas::AutoPas<Particle>;
 
-void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, double density, const std::array<double, 3> &bBoxMax, SPHConfig &config) {
+void SetupIC(AutoPasContainer &sphSystem, double density, const std::array<double, 3> &bBoxMax, SPHConfig &config) {
   // Place SPH particles
   AutoPasLog(INFO, "Setup started");
 
@@ -45,9 +45,6 @@ void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, double d
       }
     }
   }
-
-  *dt = config.getTimeStep();
-  *end_time = config.getTotalTime();
 
   AutoPasLog(INFO, "Setup completed");
   AutoPasLog(INFO, "Number of particles (i): {}", i);
@@ -204,21 +201,11 @@ int main(int argc, char* argv[]) {
       return 1;
   }
 
-  std::array<double, 3> boxMin({0., 0., 0.}), boxMax{};
-  boxMax[0] = config.getBoxMaxX();
-  boxMax[1] = config.getBoxMaxY();
-  boxMax[2] = config.getBoxMaxX();
-  double cutoff = 0.03;               // 0.012*2.5=0.03; where 2.5 = kernel support radius
-  unsigned int rebuildFrequency = 6;  // has to be multiple of two, as there are two functor calls per iteration.
-  double skinToCutoffRatio = 0.15;
-  std::array<double, 3> gravity({0., -10., 0});
-  double slosh_acc = 5;
-  double density = 1000.0;
-
   AutoPasContainer sphSystem;
-  sphSystem.setBoxMin(boxMin);
-  sphSystem.setBoxMax(boxMax);
-  config.SetupContainer(sphSystem);
+  std::array<double, 3> boxMin({0., 0., 0.}), boxMax{};
+  double dt, t_end;
+  double cutoff;
+  config.SetupContainer(sphSystem, boxMin, boxMax, &dt, &t_end, &cutoff);
 
   std::set<autopas::ContainerOption> allowedContainers{autopas::ContainerOption::linkedCells,
                                                        autopas::ContainerOption::verletLists,
@@ -230,9 +217,11 @@ int main(int argc, char* argv[]) {
 
   sphSystem.init();
 
-  double dt;
-  double t_end;
-  SetupIC(sphSystem, &dt, &t_end, density, boxMax, config);
+  std::array<double, 3> gravity({0., -10., 0});
+  double slosh_acc = 5;
+  double density = 1000.0;
+
+  SetupIC(sphSystem, density, boxMax, config);
   Initialize(sphSystem, density);
   const int record_freq = static_cast<int>(std::round(0.005 / dt));
   // LogParticlePositions(sphSystem);

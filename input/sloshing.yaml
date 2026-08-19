@@ -1,13 +1,14 @@
 simulation:
   name: "Fluid Dynamics Test"
-  time_step: 0.0002
-  total_time: 0.3
 
   BoxSize_X: 0.25
   BoxSize_Y: 0.25
   BoxSize_Z: 0.25
 
-  cutoff: 0.03
+  time_step: 0.0002
+  total_time: 0.3
+
+  cutoff: 0.03  # 0.012*2.5=0.03; where 2.5 = kernel support radius
   skin_cutoff_ratio: 0.15
   rebuild_frequency: 6  # has to be multiple of two, as there are two functor calls per iteration.
   num_samples: 6  # has to be multiple of 2, should also be multiple of rebuild_frequency (but this is not necessary)
