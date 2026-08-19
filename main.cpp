@@ -11,7 +11,7 @@
 #include <iostream>
 
 #include "autopas/AutoPas.h"
-#include "SPHParticle.cpp"
+#include "SPHParticle.h"
 #include "DensityFunctor.h"
 #include "HydroForceFunctor.h"
 #include "SimpleVtkWriter.h"

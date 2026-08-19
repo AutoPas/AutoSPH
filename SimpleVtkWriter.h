@@ -9,7 +9,7 @@
 #include <limits>
 #include <sys/stat.h>
 #include "autopas/AutoPas.h"
-#include "SPHParticle.cpp"
+#include "SPHParticle.h"
 // #include "src/TypeDefinitions.h" // Ensure this contains your ParticleType definition
 
 using ParticleType = SPHParticle;
