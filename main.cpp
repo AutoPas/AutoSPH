@@ -15,11 +15,12 @@
 #include "DensityFunctor.h"
 #include "HydroForceFunctor.h"
 #include "SimpleVtkWriter.h"
+#include "SPHConfig.h"
 
 using Particle = SPHParticle;
 using AutoPasContainer = autopas::AutoPas<Particle>;
 
-void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, double density, const std::array<double, 3> &bBoxMax) {
+void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, double density, const std::array<double, 3> &bBoxMax, SPHConfig &config) {
   // Place SPH particles
   AutoPasLog(INFO, "Setup started");
 
@@ -45,9 +46,8 @@ void SetupIC(AutoPasContainer &sphSystem, double *dt, double *end_time, double d
     }
   }
 
-  // Set dt and end time
-  *dt = .0002;
-  *end_time = 5;
+  *dt = config.getTimeStep();
+  *end_time = config.getTotalTime();
 
   AutoPasLog(INFO, "Setup completed");
   AutoPasLog(INFO, "Number of particles (i): {}", i);
@@ -191,9 +191,23 @@ void addEnteringParticles(AutoPasContainer &sphSystem, std::vector<Particle> &in
   }
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+  if (argc < 2) {
+      std::cerr << "Usage: " << argv[0] << " <path_to_config.yaml>\n";
+      return 1;
+  }
+
+  std::string configFilePath = argv[1];
+
+  SPHConfig config;
+  if (!config.loadFromFile(configFilePath)) {
+      return 1;
+  }
+
   std::array<double, 3> boxMin({0., 0., 0.}), boxMax{};
-  boxMax[0] = boxMax[1] = boxMax[2] = .25;
+  boxMax[0] = config.getBoxMaxX();
+  boxMax[1] = config.getBoxMaxY();
+  boxMax[2] = config.getBoxMaxX();
   double cutoff = 0.03;               // 0.012*2.5=0.03; where 2.5 = kernel support radius
   unsigned int rebuildFrequency = 6;  // has to be multiple of two, as there are two functor calls per iteration.
   double skinToCutoffRatio = 0.15;
@@ -202,13 +216,9 @@ int main() {
   double density = 1000.0;
 
   AutoPasContainer sphSystem;
-  sphSystem.setNumSamples(
-      6);  // has to be multiple of 2, should also be multiple of rebuildFrequency (but this is not necessary).
   sphSystem.setBoxMin(boxMin);
   sphSystem.setBoxMax(boxMax);
-  sphSystem.setCutoff(cutoff);
-  sphSystem.setVerletSkin(skinToCutoffRatio * cutoff);
-  sphSystem.setVerletRebuildFrequency(rebuildFrequency);
+  config.SetupContainer(sphSystem);
 
   std::set<autopas::ContainerOption> allowedContainers{autopas::ContainerOption::linkedCells,
                                                        autopas::ContainerOption::verletLists,
@@ -222,7 +232,7 @@ int main() {
 
   double dt;
   double t_end;
-  SetupIC(sphSystem, &dt, &t_end, density, boxMax);
+  SetupIC(sphSystem, &dt, &t_end, density, boxMax, config);
   Initialize(sphSystem, density);
   const int record_freq = static_cast<int>(std::round(0.005 / dt));
   // LogParticlePositions(sphSystem);
