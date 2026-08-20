@@ -188,11 +188,11 @@ int main(int argc, char* argv[]) {
   }
 
   AutoPasContainer sphSystem;
-  std::array<double, 3> boxMin({0., 0., 0.}), boxMax{};
+  std::array<double, 3> boxMin(config.getBoxMin()), boxMax(config.getBoxMax());
   double dt, t_end;
   int write_freq;
   double cutoff;
-  config.SetupContainer(sphSystem, boxMin, boxMax, &dt, &t_end, &write_freq, &cutoff);
+  config.SetupContainer(sphSystem, &dt, &t_end, &write_freq, &cutoff);
 
   std::set<autopas::ContainerOption> allowedContainers{autopas::ContainerOption::linkedCells,
                                                        autopas::ContainerOption::verletLists,
@@ -237,7 +237,7 @@ int main(int argc, char* argv[]) {
 
     if (step % write_freq == 0) {
       AutoPasLog(INFO, "Iteration {} completed", step);
-      AutoPasLog(INFO, "Number of particles: {}", sphSystem.getNumberOfParticles(autopas::IteratorBehavior::ownedOrHalo));
+      // AutoPasLog(INFO, "Number of particles: {}", sphSystem.getNumberOfParticles(autopas::IteratorBehavior::ownedOrHalo));
       vtkWriter.recordTimestep(step, sphSystem, boxMin, boxMax);
     }
 

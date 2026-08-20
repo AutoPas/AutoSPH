@@ -1,9 +1,8 @@
 simulation:
-  name: "Fluid Dynamics Test"
+  name: "Sloshing"
 
-  BoxSize_X: 0.25
-  BoxSize_Y: 0.25
-  BoxSize_Z: 0.25
+  box_min: [0.0, 0.0, 0.0]
+  box_max: [0.25, 0.25, 0.25]
 
   time_step: 0.0002
   total_time: 0.5

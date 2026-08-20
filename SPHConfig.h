@@ -12,9 +12,8 @@ using AutoPasContainer = autopas::AutoPas<SPHParticle>;
 
 class SPHConfig {
 private:
-    double boxMaxX;
-    double boxMaxY;
-    double boxMaxZ;
+    std::array<double, 3> boxMin;
+    std::array<double, 3> boxMax;
     double timeStep;
     double totalTime;
     double writeFrequency;
@@ -33,9 +32,8 @@ public:
         try {
             YAML::Node config = YAML::LoadFile(filename);
 
-            boxMaxX = config["simulation"]["BoxSize_X"].as<double>();
-            boxMaxY = config["simulation"]["BoxSize_Y"].as<double>();
-            boxMaxZ = config["simulation"]["BoxSize_Z"].as<double>();
+            boxMin = config["simulation"]["box_min"].as<std::array<double, 3>>();
+            boxMax = config["simulation"]["box_max"].as<std::array<double, 3>>();
 
             timeStep = config["simulation"]["time_step"].as<double>();
             totalTime = config["simulation"]["total_time"].as<double>();
@@ -60,17 +58,15 @@ public:
         }
     }
 
+    std::array<double, 3> getBoxMin() { return boxMin; }
+    std::array<double, 3> getBoxMax() { return boxMax; }
     std::array<double, 3> getGravity() { return gravity; }
     std::vector<double> getForceTimestamps() { return forceTimestamps; }
     std::vector<std::array<double, 3>> getCustomForces() { return customForces; }
 
-    void SetupContainer(AutoPasContainer &sphSystem, std::array<double, 3> &bBoxMin, std::array<double, 3> &bBoxMax, double *dt, double *t_end, int *write_freq, double *_cutoff) {
-        bBoxMax[0] = boxMaxX;
-        bBoxMax[1] = boxMaxY;
-        bBoxMax[2] = boxMaxZ;
-
-        sphSystem.setBoxMin(bBoxMin);
-        sphSystem.setBoxMax(bBoxMax);
+    void SetupContainer(AutoPasContainer &sphSystem, double *dt, double *t_end, int *write_freq, double *_cutoff) {
+        sphSystem.setBoxMin(boxMin);
+        sphSystem.setBoxMax(boxMax);
 
         sphSystem.setNumSamples(numSamples);
         sphSystem.setCutoff(cutoff);
