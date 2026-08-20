@@ -61,28 +61,12 @@ void Initialize(AutoPasContainer &sphSystem, double density_0) {
   AutoPasLog(INFO, "Initialization completed");
 }
 
-void LogParticlePositions(AutoPasContainer &sphSystem) {
-  std::array<double, 3> position;
-  for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
-    position = part->getR();
-    AutoPasLog(INFO, "Position of particle {}: {}, {}, {}", part->getID(), position[0], position[1], position[2]);
-  }
-}
-
 void eulerStep(AutoPasContainer &sphSystem, const double dt) {
   using namespace autopas::utils::ArrayMath::literals;
 
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
     part->addV(part->getAcceleration() * dt);
     part->addR(part->getV() * dt);
-  }
-}
-
-void applyConstantForce(AutoPasContainer &sphSystem) {
-  using namespace autopas::utils::ArrayMath::literals;
-
-  for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
-    part->setAcceleration({2e3, 1e3, 0.0});
   }
 }
 
@@ -233,11 +217,10 @@ int main(int argc, char* argv[]) {
 
   SimpleVtkWriter vtkWriter("serial_test_run", "./output", 5);
 
-  applyConstantForce(sphSystem);
   size_t step = 0;
   size_t force_step = 0;
-  for (double time = 0.; time < t_end; time += dt, ++step) {
 
+  for (double time = 0.; time < t_end; time += dt, ++step) {
     generateGhostParticles(sphSystem, cutoff);
 
     if (time > forceTimestamps[force_step]) {
@@ -262,6 +245,5 @@ int main(int argc, char* argv[]) {
     addEnteringParticles(sphSystem, invalidParticles);
   }
 
-  // LogParticlePositions(sphSystem);
 }
 
