@@ -5,7 +5,7 @@ simulation:
   box_max: [0.5, 0.5, 0.5]
 
   time_step: 0.0002
-  total_time: 0.5
+  total_time: 0.75
   write_frequency: 0.005
 
   cutoff: 0.03  # 0.012*2.5=0.03; where 2.5 = kernel support radius
@@ -15,9 +15,6 @@ simulation:
 
 forces:
   gravity: [0.0, -10.0, 0.0]
-  time_dependent:
-    - timestamp: 0.5
-      force: [0.0, 0.0, 0.0]
 
 particles:
   density: 1000.0
