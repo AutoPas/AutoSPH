@@ -12,6 +12,10 @@ using AutoPasContainer = autopas::AutoPas<SPHParticle>;
 
 class SPHConfig {
 private:
+    std::string outputFolder;
+    std::string sessionName;
+    unsigned int maxDigits;
+
     std::array<double, 3> boxMin{};
     std::array<double, 3> boxMax{};
     double timeStep;
@@ -40,6 +44,9 @@ public:
     bool loadFromFile(const std::string& filename) {
         try {
             YAML::Node config = YAML::LoadFile(filename);
+
+            outputFolder = config["output"]["output_folder"].as<std::string>();
+            sessionName = config["output"]["session_name"].as<std::string>();
 
             boxMin = config["simulation"]["box_min"].as<std::array<double, 3>>();
             boxMax = config["simulation"]["box_max"].as<std::array<double, 3>>();
@@ -79,6 +86,9 @@ public:
         }
     }
 
+    std::string getOutputFolder() { return outputFolder; }
+    std::string getSessionName() { return sessionName; }
+    unsigned int getMaxDigits() { return std::to_string(static_cast<int>(totalTime / timeStep)).length(); }
     std::array<double, 3> getBoxMin() { return boxMin; }
     std::array<double, 3> getBoxMax() { return boxMax; }
     std::array<double, 3> getGravity() { return gravity; }

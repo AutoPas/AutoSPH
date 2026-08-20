@@ -182,7 +182,7 @@ int main(int argc, char* argv[]) {
   config.SetupParticles(sphSystem);
   Initialize(sphSystem, density);
 
-  SimpleVtkWriter vtkWriter("serial_test_run", "./output", 5);
+  SimpleVtkWriter vtkWriter(config.getSessionName(), config.getOutputFolder(), config.getMaxDigits());
 
   size_t step = 0;
   size_t force_step = 0;
