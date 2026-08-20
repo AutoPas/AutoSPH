@@ -30,6 +30,9 @@ private:
     std::array<double, 3> particleBoxMin{};
     std::array<double, 3> particleBoxMax{};
     std::array<unsigned int, 3> particleNum{};
+    double smoothingLength;
+    double soundSpeed;
+    std::array<double, 3> particleVelocity{0.0, 0.0, 0.0};
 
 public:
     SPHConfig() = default;
@@ -61,9 +64,13 @@ public:
             customForces.push_back({0.0, 0.0, 0.0});
 
             density = config["particles"]["density"].as<double>();
+
             particleBoxMin = config["particles"]["particle_box_min"].as<std::array<double, 3>>();
             particleBoxMax = config["particles"]["particle_box_max"].as<std::array<double, 3>>();
             particleNum = config["particles"]["particle_num"].as<std::array<unsigned int, 3>>();
+
+            smoothingLength = config["particles"]["smoothing_length"].as<double>();
+            soundSpeed = config["particles"]["sound_speed"].as<double>();
 
             return true;
         } catch (const YAML::Exception& e) {
@@ -131,7 +138,7 @@ public:
         for (double x = particleBoxMin[0]; x < particleBoxMax[0]; x += particleSpacing[0]) {
             for (double y = particleBoxMin[1]; y < particleBoxMax[1]; y += particleSpacing[1]) {
                 for (double z = particleBoxMin[2]; z < particleBoxMax[2]; z += particleSpacing[2]) {
-                    SPHParticle ith({x, y, z}, {0, 0, 0}, i++, particleMass, 0.012, 20.0);
+                    SPHParticle ith({x, y, z}, particleVelocity, i++, particleMass, smoothingLength, soundSpeed);
                     ith.setDensity(density);
                     ith.setEnergy(2.5);
                     sphSystem.addParticle(ith);
