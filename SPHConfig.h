@@ -56,10 +56,9 @@ public:
                     forceTimestamps.push_back(node["timestamp"].as<double>());
                     customForces.push_back(node["force"].as<std::array<double, 3>>());
                 }
-            } else {
-                forceTimestamps.push_back(totalTime + timeStep);
-                customForces.push_back({0.0, 0.0, 0.0});
             }
+            forceTimestamps.push_back(totalTime + timeStep);
+            customForces.push_back({0.0, 0.0, 0.0});
 
             density = config["particles"]["density"].as<double>();
             particleBoxMin = config["particles"]["particle_box_min"].as<std::array<double, 3>>();
