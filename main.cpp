@@ -22,37 +22,6 @@
 using Particle = SPHParticle;
 using AutoPasContainer = autopas::AutoPas<Particle>;
 
-void SetupIC(AutoPasContainer &sphSystem, double density, const std::array<double, 3> &bBoxMax, SPHConfig &config) {
-  // Place SPH particles
-  AutoPasLog(INFO, "Setup started");
-
-  const double i_box = 0.5;
-  const int part_num = 16;
-  const double part_cube_size = bBoxMax[0] * i_box;
-  const double dx = bBoxMax[2] / (part_num + 1);
-  const double dim0 = bBoxMax[0] - 2 * dx;
-  const double dim1 = bBoxMax[1] * 0.5 - dx - std::fmod(bBoxMax[0] * 0.5, dx);
-  const double dim2 = bBoxMax[2] - 2 * dx;
-  const double total_mass =  dim0 * dim1 * dim2 * density;
-  const double part_mass = total_mass / (part_num * part_num * part_num * 0.5);
-  unsigned int i = 0;
-  for (double x = dx; x < bBoxMax[0]; x += dx) {         // NOLINT
-    // for (double y = bBoxMax[1] - bBoxMax[1] * i_box; y < bBoxMax[1] - dx; y += dx) {       // NOLINT
-    for (double y = dx; y < bBoxMax[1]*0.5; y += dx) {       // NOLINT
-      for (double z = dx; z < bBoxMax[2]; z += dx) {     // NOLINT
-        Particle ith({x, y, z}, {0, 0, 0}, i++, part_mass, 0.012, 20.0);
-        ith.setDensity(density);
-        ith.setEnergy(2.5);
-        sphSystem.addParticle(ith);
-      }
-    }
-  }
-
-  AutoPasLog(INFO, "Setup completed");
-  AutoPasLog(INFO, "Number of particles (i): {}", i);
-  AutoPasLog(INFO, "Number of particles: {}", sphSystem.getNumberOfParticles());
-}
-
 void Initialize(AutoPasContainer &sphSystem, double density_0) {
   AutoPasLog(INFO, "Initialization started");
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
@@ -121,7 +90,7 @@ void generateGhostParticles(AutoPasContainer &sphSystem, double cutoff) {
     auto pos = part->getR();
     auto vel = part->getV();
 
-    for (auto dim = 0; dim < 3; dim++) {
+    for (size_t dim = 0; dim < 3; dim++) {
       needs_ghost = false;
       min_d = pos[dim] - boxMin[dim];
       max_d = boxMax[dim] - pos[dim];
@@ -156,7 +125,7 @@ void addEnteringParticles(AutoPasContainer &sphSystem, std::vector<Particle> &in
     // first we have to correct the position of the particles, s.t. they lie inside of the box.
     auto pos = p.getR();
     auto vel = p.getV();
-    for (auto dim = 0; dim < 3; dim++) {
+    for (size_t dim = 0; dim < 3; dim++) {
       if (pos[dim] < boxMin[dim]) {
         // has to be smaller than boxMax
         pos[dim] = std::min(std::nextafter(boxMax[dim], -1), boxMin[dim] + (boxMin[dim] - pos[dim]));
@@ -191,8 +160,8 @@ int main(int argc, char* argv[]) {
   std::array<double, 3> boxMin(config.getBoxMin()), boxMax(config.getBoxMax());
   double dt, t_end;
   int write_freq;
-  double cutoff;
-  config.SetupContainer(sphSystem, &dt, &t_end, &write_freq, &cutoff);
+  double cutoff, density;
+  config.SetupContainer(sphSystem, &dt, &t_end, &write_freq, &cutoff, &density);
 
   std::set<autopas::ContainerOption> allowedContainers{autopas::ContainerOption::linkedCells,
                                                        autopas::ContainerOption::verletLists,
@@ -210,9 +179,7 @@ int main(int argc, char* argv[]) {
 
   std::array<double, 3> externalForce = gravity;
 
-  double density = 1000.0;
-
-  SetupIC(sphSystem, density, boxMax, config);
+  config.SetupParticles(sphSystem);
   Initialize(sphSystem, density);
 
   SimpleVtkWriter vtkWriter("serial_test_run", "./output", 5);
