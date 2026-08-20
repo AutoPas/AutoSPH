@@ -17,6 +17,7 @@ private:
     double boxMaxZ;
     double timeStep;
     double totalTime;
+    double writeFrequency;
     double cutoff;
     double skinToCutoffRatio;
     unsigned int rebuildFrequency;
@@ -35,6 +36,7 @@ public:
 
             timeStep = config["simulation"]["time_step"].as<double>();
             totalTime = config["simulation"]["total_time"].as<double>();
+            writeFrequency = config["simulation"]["write_frequency"].as<double>();
 
             cutoff = config["simulation"]["cutoff"].as<double>();
             skinToCutoffRatio = config["simulation"]["skin_cutoff_ratio"].as<double>();
@@ -48,7 +50,7 @@ public:
         }
     }
 
-    void SetupContainer(AutoPasContainer &sphSystem, std::array<double, 3> &bBoxMin, std::array<double, 3> &bBoxMax, double *dt, double *t_end, double *_cutoff) {
+    void SetupContainer(AutoPasContainer &sphSystem, std::array<double, 3> &bBoxMin, std::array<double, 3> &bBoxMax, double *dt, double *t_end, int *write_freq, double *_cutoff) {
         bBoxMax[0] = boxMaxX;
         bBoxMax[1] = boxMaxY;
         bBoxMax[2] = boxMaxZ;
@@ -63,6 +65,7 @@ public:
 
         *dt = timeStep;
         *t_end = totalTime;
+        *write_freq = static_cast<int>(std::round(writeFrequency / timeStep));
         *_cutoff = cutoff;
     }
 };

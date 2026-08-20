@@ -204,8 +204,9 @@ int main(int argc, char* argv[]) {
   AutoPasContainer sphSystem;
   std::array<double, 3> boxMin({0., 0., 0.}), boxMax{};
   double dt, t_end;
+  int write_freq;
   double cutoff;
-  config.SetupContainer(sphSystem, boxMin, boxMax, &dt, &t_end, &cutoff);
+  config.SetupContainer(sphSystem, boxMin, boxMax, &dt, &t_end, &write_freq, &cutoff);
 
   std::set<autopas::ContainerOption> allowedContainers{autopas::ContainerOption::linkedCells,
                                                        autopas::ContainerOption::verletLists,
@@ -223,8 +224,6 @@ int main(int argc, char* argv[]) {
 
   SetupIC(sphSystem, density, boxMax, config);
   Initialize(sphSystem, density);
-  const int record_freq = static_cast<int>(std::round(0.005 / dt));
-  // LogParticlePositions(sphSystem);
 
   SimpleVtkWriter vtkWriter("serial_test_run", "./output", 5);
 
@@ -240,7 +239,7 @@ int main(int argc, char* argv[]) {
 
     eulerStep(sphSystem, dt);
 
-    if (step % record_freq == 0) {
+    if (step % write_freq == 0) {
       AutoPasLog(INFO, "Iteration {} completed", step);
       AutoPasLog(INFO, "Number of particles: {}", sphSystem.getNumberOfParticles(autopas::IteratorBehavior::ownedOrHalo));
       vtkWriter.recordTimestep(step, sphSystem, boxMin, boxMax);
