@@ -17,6 +17,8 @@
 #include "SimpleVtkWriter.h"
 #include "SPHConfig.h"
 
+#include "autopas/utils/ArrayMath.h"
+
 using Particle = SPHParticle;
 using AutoPasContainer = autopas::AutoPas<Particle>;
 
@@ -117,9 +119,9 @@ void calculateHydroForce(AutoPasContainer &sphSystem) {
   sphSystem.computeInteractions(&hydroForceFunctor);
 }
 
-void addGravity(AutoPasContainer &sphSystem, const std::array<double, 3> &gravity) {
+void addExternalForce(AutoPasContainer &sphSystem, const std::array<double, 3> &externalForce) {
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
-    part->addAcceleration(gravity);
+    part->addAcceleration(externalForce);
   }
 }
 
@@ -218,8 +220,12 @@ int main(int argc, char* argv[]) {
 
   sphSystem.init();
 
-  std::array<double, 3> gravity({0., -10., 0});
-  double slosh_acc = 5;
+  std::array<double, 3> gravity = config.getGravity();
+  std::vector<double> forceTimestamps = config.getForceTimestamps();
+  std::vector<std::array<double, 3>> customForces = config.getCustomForces();
+
+  std::array<double, 3> externalForce = gravity;
+
   double density = 1000.0;
 
   SetupIC(sphSystem, density, boxMax, config);
@@ -229,13 +235,20 @@ int main(int argc, char* argv[]) {
 
   applyConstantForce(sphSystem);
   size_t step = 0;
+  size_t force_step = 0;
   for (double time = 0.; time < t_end; time += dt, ++step) {
+
     generateGhostParticles(sphSystem, cutoff);
+
+    if (time > forceTimestamps[force_step]) {
+      externalForce = autopas::utils::ArrayMath::add(gravity, customForces[force_step]);
+      force_step += 1;
+    }
 
     calculateDensity(sphSystem);
     updatePressure(sphSystem, density);
     calculateHydroForce(sphSystem);
-    addGravity(sphSystem, gravity);
+    addExternalForce(sphSystem, externalForce);
 
     eulerStep(sphSystem, dt);
 
@@ -243,16 +256,6 @@ int main(int argc, char* argv[]) {
       AutoPasLog(INFO, "Iteration {} completed", step);
       AutoPasLog(INFO, "Number of particles: {}", sphSystem.getNumberOfParticles(autopas::IteratorBehavior::ownedOrHalo));
       vtkWriter.recordTimestep(step, sphSystem, boxMin, boxMax);
-
-      if (time > t_end * .8) {
-        gravity = {0., -10., 0};
-      } else if (time > t_end * .6) {
-        gravity = {slosh_acc, -10., 0};
-      } else if (time > t_end * .4) {
-        gravity = {0., -10., 0};
-      } else if (time > t_end * .2) {
-        gravity = {-slosh_acc, -10., 0};
-      }
     }
 
     auto invalidParticles = sphSystem.updateContainer();

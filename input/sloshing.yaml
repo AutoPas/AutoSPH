@@ -14,6 +14,18 @@ simulation:
   rebuild_frequency: 6  # has to be multiple of two, as there are two functor calls per iteration.
   num_samples: 6  # has to be multiple of 2, should also be multiple of rebuild_frequency (but this is not necessary)
 
+forces:
+  gravity: [0.0, -10.0, 0.0]
+  time_dependent:
+    - timestamp: 0.1
+      force: [-5.0, 0.0, 0.0]
+    - timestamp: 0.2
+      force: [0.0, 0.0, 0.0]
+    - timestamp: 0.3
+      force: [5.0, 0.0, 0.0]
+    - timestamp: 0.4
+      force: [0.0, 0.0, 0.0]
+
 particles:
   count: 500
   gravity: [0.0, -9.81, 0.0]

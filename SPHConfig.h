@@ -22,6 +22,9 @@ private:
     double skinToCutoffRatio;
     unsigned int rebuildFrequency;
     unsigned int numSamples;
+    std::array<double, 3> gravity;
+    std::vector<double> forceTimestamps;
+    std::vector<std::array<double, 3>> customForces;
 
 public:
     SPHConfig() = default;
@@ -43,12 +46,23 @@ public:
             rebuildFrequency = config["simulation"]["rebuild_frequency"].as<unsigned int>();
             numSamples = config["simulation"]["num_samples"].as<unsigned int>();
 
+            gravity = config["forces"]["gravity"].as<std::array<double, 3>>();
+            if (config["forces"]["time_dependent"]) {
+                for (const auto& node : config["forces"]["time_dependent"]) {
+                    forceTimestamps.push_back(node["timestamp"].as<double>());
+                    customForces.push_back(node["force"].as<std::array<double, 3>>());
+                }
+            }
             return true;
         } catch (const YAML::Exception& e) {
             std::cerr << "Error parsing YAML file: " << e.what() << std::endl;
             return false;
         }
     }
+
+    std::array<double, 3> getGravity() { return gravity; }
+    std::vector<double> getForceTimestamps() { return forceTimestamps; }
+    std::vector<std::array<double, 3>> getCustomForces() { return customForces; }
 
     void SetupContainer(AutoPasContainer &sphSystem, std::array<double, 3> &bBoxMin, std::array<double, 3> &bBoxMax, double *dt, double *t_end, int *write_freq, double *_cutoff) {
         bBoxMax[0] = boxMaxX;
