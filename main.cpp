@@ -30,12 +30,20 @@ void Initialize(AutoPasContainer &sphSystem, double density_0) {
   AutoPasLog(INFO, "Initialization completed");
 }
 
-void eulerStep(AutoPasContainer &sphSystem, const double dt) {
+void velocityVerletFirstStep(AutoPasContainer &sphSystem, const double dt) {
   using namespace autopas::utils::ArrayMath::literals;
 
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
-    part->addV(part->getAcceleration() * dt);
+    part->addV(part->getAcceleration() * dt * 0.5);
     part->addR(part->getV() * dt);
+  }
+}
+
+void velocityVerletSecondStep(AutoPasContainer &sphSystem, const double dt) {
+  using namespace autopas::utils::ArrayMath::literals;
+
+  for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
+    part->addV(part->getAcceleration() * dt * 0.5);
   }
 }
 
@@ -188,19 +196,19 @@ int main(int argc, char* argv[]) {
   size_t force_step = 0;
 
   for (double time = 0.; time < t_end; time += dt, ++step) {
-    generateGhostParticles(sphSystem, cutoff);
+    velocityVerletFirstStep(sphSystem, dt);
 
     if (time > forceTimestamps[force_step]) {
       externalForce = autopas::utils::ArrayMath::add(gravity, customForces[force_step]);
       force_step += 1;
     }
-
+    generateGhostParticles(sphSystem, cutoff);
     calculateDensity(sphSystem);
     updatePressure(sphSystem, density);
     calculateHydroForce(sphSystem);
     addExternalForce(sphSystem, externalForce);
 
-    eulerStep(sphSystem, dt);
+    velocityVerletSecondStep(sphSystem, dt);
 
     if (step % write_freq == 0) {
       AutoPasLog(INFO, "Iteration {} completed", step);
