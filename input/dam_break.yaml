@@ -1,13 +1,13 @@
 output:
-  output_folder: "./output"
+  output_folder: "../output"
   session_name: "dam_break"
 
 simulation:
   box_min: [0.0, 0.0, 0.0]
-  box_max: [0.5, 0.5, 0.5]
+  box_max: [0.25, 0.25, 0.25]
 
-  time_step: 0.0002
-  total_time: 0.25
+  time_step: 0.0001
+  total_time: 1 
   write_frequency: 0.005
 
   cutoff: 0.03  # 0.012*2.5=0.03; where 2.5 = kernel support radius
@@ -22,8 +22,8 @@ particles:
   density: 1000.0
 
   particle_box_min: [0.0, 0.0, 0.0]
-  particle_box_max: [0.125, 0.25, 0.5]
-  particle_num: [8, 16, 24]
+  particle_box_max: [0.0625, 0.125, 0.25]
+  particle_num: [8, 16, 32]
 
   smoothing_length: 0.012
   sound_speed: 20.0

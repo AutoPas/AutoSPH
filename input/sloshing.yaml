@@ -1,13 +1,13 @@
 output:
-  output_folder: "./output"
+  output_folder: "../output"
   session_name: "sloshing"
 
 simulation:
   box_min: [0.0, 0.0, 0.0]
-  box_max: [0.5, 0.5, 0.5]
+  box_max: [0.25, 0.25, 0.25]
 
-  time_step: 0.0002
-  total_time: 0.1
+  time_step: 0.0001
+  total_time: 2.5
   write_frequency: 0.005
 
   cutoff: 0.03  # 0.012*2.5=0.03; where 2.5 = kernel support radius
@@ -18,21 +18,21 @@ simulation:
 forces:
   gravity: [0.0, -10.0, 0.0]
   time_dependent:
-    - timestamp: 0.1
+    - timestamp: 0.5
       force: [-5.0, 0.0, 0.0]
-    - timestamp: 0.2
+    - timestamp: 1.0
       force: [0.0, 0.0, 0.0]
-    - timestamp: 0.3
+    - timestamp: 1.5
       force: [5.0, 0.0, 0.0]
-    - timestamp: 0.4
+    - timestamp: 2.0
       force: [0.0, 0.0, 0.0]
 
 particles:
   density: 1000.0
 
-  particle_box_min: [0.2, 0.2, 0.2]
-  particle_box_max: [0.3, 0.3, 0.3]
-  particle_num: [12, 12, 12]
+  particle_box_min: [0.0, 0.0, 0.0]
+  particle_box_max: [0.25, 0.125, 0.25]
+  particle_num: [16, 8, 16]
 
   smoothing_length: 0.012
   sound_speed: 20.0
