@@ -115,10 +115,10 @@ public:
     }
 
     void SetupParticles(AutoPasContainer &sphSystem) {
-        unsigned int num_div;
         unsigned int i = 0;
         unsigned int total_num_particles = particleNum[0] * particleNum[1] * particleNum[2];
         double x, y, z;
+        double num_div;
         double particlesVolume = 1;
         double particleMass;
         std::array<double, 3> particleSpacing;
@@ -129,17 +129,17 @@ public:
             num_div = particleNum[dim] - 1;
             if (particleBoxMin[dim] <= boxMin[dim]) {
                 particleBoxMin[dim] = boxMin[dim];
-                num_div += 1;
+                num_div += .5;
             }
             if (particleBoxMax[dim] >= boxMax[dim]) {
                 particleBoxMax[dim] = boxMax[dim];
-                num_div += 1;
+                num_div += .5;
             }
 
             particleSpacing[dim] = (particleBoxMax[dim] - particleBoxMin[dim]) / num_div;
 
-            if (particleBoxMin[dim] == boxMin[dim]) { particleBoxMin[dim] += particleSpacing[dim]; }
-            if (particleBoxMax[dim] == boxMax[dim]) { particleBoxMax[dim] -= particleSpacing[dim]; }
+            if (particleBoxMin[dim] == boxMin[dim]) { particleBoxMin[dim] += 0.5 * particleSpacing[dim]; }
+            if (particleBoxMax[dim] == boxMax[dim]) { particleBoxMax[dim] -= 0.5 * particleSpacing[dim]; }
 
             particlesVolume *= particleBoxMax[dim] - particleBoxMin[dim];
 
