@@ -105,7 +105,7 @@ public:
         sphSystem.setVerletRebuildFrequency(rebuildFrequency);
 
         *dt = timeStep;
-        *t_end = totalTime;
+        *t_end = totalTime + timeStep * 0.5;
         *write_freq = static_cast<int>(std::round(writeFrequency / timeStep));
         *_cutoff = cutoff;
         *_density = density;
