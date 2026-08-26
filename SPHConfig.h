@@ -36,6 +36,7 @@ private:
     std::array<unsigned int, 3> particleNum{};
     double smoothingLength;
     double soundSpeed;
+    double alpha;
     std::array<double, 3> particleVelocity{0.0, 0.0, 0.0};
 
 public:
@@ -78,6 +79,7 @@ public:
 
             smoothingLength = config["particles"]["smoothing_length"].as<double>();
             soundSpeed = config["particles"]["sound_speed"].as<double>();
+            alpha = config["particles"]["alpha"].as<double>();
 
             return true;
         } catch (const YAML::Exception& e) {
@@ -95,7 +97,7 @@ public:
     std::vector<double> getForceTimestamps() { return forceTimestamps; }
     std::vector<std::array<double, 3>> getCustomForces() { return customForces; }
 
-    void SetupContainer(AutoPasContainer &sphSystem, double *dt, double *t_end, int *write_freq, double *_cutoff, double *_density) {
+    void SetupContainer(AutoPasContainer &sphSystem, double *dt, double *t_end, int *write_freq, double *_cutoff, double *_density, double *_alpha) {
         sphSystem.setBoxMin(boxMin);
         sphSystem.setBoxMax(boxMax);
 
@@ -109,6 +111,7 @@ public:
         *write_freq = static_cast<int>(std::round(writeFrequency / timeStep));
         *_cutoff = cutoff;
         *_density = density;
+        *_alpha = alpha;
     }
 
     void SetupParticles(AutoPasContainer &sphSystem) {

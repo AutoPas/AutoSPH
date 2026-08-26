@@ -69,8 +69,8 @@ void updatePressure(AutoPasContainer &sphSystem, double density_0) {
   }
 }
 
-void calculateHydroForce(AutoPasContainer &sphSystem, double cutoff) {
-  HydroForceFunctor<Particle> hydroForceFunctor(cutoff);
+void calculateHydroForce(AutoPasContainer &sphSystem, double cutoff, double alpha) {
+  HydroForceFunctor<Particle> hydroForceFunctor(cutoff, alpha);
 
   AUTOPAS_OPENMP(parallel)
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
@@ -174,8 +174,8 @@ int main(int argc, char* argv[]) {
   std::array<double, 3> boxMin(config.getBoxMin()), boxMax(config.getBoxMax());
   double dt, t_end;
   int write_freq;
-  double cutoff, density;
-  config.SetupContainer(sphSystem, &dt, &t_end, &write_freq, &cutoff, &density);
+  double cutoff, density, alpha;
+  config.SetupContainer(sphSystem, &dt, &t_end, &write_freq, &cutoff, &density, &alpha);
 
   std::set<autopas::ContainerOption> allowedContainers{autopas::ContainerOption::linkedCells,
                                                        autopas::ContainerOption::verletLists,
@@ -214,7 +214,7 @@ int main(int argc, char* argv[]) {
     generateGhostParticles(sphSystem, cutoff);
     calculateDensity(sphSystem);
     updatePressure(sphSystem, density);
-    calculateHydroForce(sphSystem, cutoff);
+    calculateHydroForce(sphSystem, cutoff, alpha);
     addExternalForce(sphSystem, externalForce);
 
     velocityVerletSecondStep(sphSystem, dt);

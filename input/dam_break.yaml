@@ -27,3 +27,5 @@ particles:
 
   smoothing_length: 0.012
   sound_speed: 20.0
+
+  alpha: 0.05  # artificial viscosity coefficient
