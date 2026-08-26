@@ -143,7 +143,7 @@ private:
         file << "        </DataArray>\n";
 
         file << "        <DataArray Name=\"pressure\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Float32\">\n";
-        for (auto p = container.begin(autopas::IteratorBehavior::owned); p.isValid(); ++p) { file << "        " << p->getPressure() << "\n"; }
+        for (auto p = container.begin(autopas::IteratorBehavior::owned); p.isValid(); ++p) { file << "        " << p->getPressure() + 100000.0 << "\n"; }
         file << "        </DataArray>\n";
 
         file << "      </PointData>\n<CellData/>\n<Points>\n"
