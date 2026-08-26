@@ -69,8 +69,8 @@ void updatePressure(AutoPasContainer &sphSystem, double density_0) {
   }
 }
 
-void calculateHydroForce(AutoPasContainer &sphSystem) {
-  HydroForceFunctor<Particle> hydroForceFunctor;
+void calculateHydroForce(AutoPasContainer &sphSystem, double cutoff) {
+  HydroForceFunctor<Particle> hydroForceFunctor(cutoff);
 
   AUTOPAS_OPENMP(parallel)
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
@@ -214,7 +214,7 @@ int main(int argc, char* argv[]) {
     generateGhostParticles(sphSystem, cutoff);
     calculateDensity(sphSystem);
     updatePressure(sphSystem, density);
-    calculateHydroForce(sphSystem);
+    calculateHydroForce(sphSystem, cutoff);
     addExternalForce(sphSystem, externalForce);
 
     velocityVerletSecondStep(sphSystem, dt);

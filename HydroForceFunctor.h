@@ -2,11 +2,15 @@
 
 template <class Particle_T>
 class HydroForceFunctor : public autopas::PairwiseFunctor<Particle_T, HydroForceFunctor<Particle_T>> {
+ private:
+  const double _cutoffSquared;
+
  public:
 
-  HydroForceFunctor()
+  HydroForceFunctor(double cutoff)
       // the actual cutoff used is dynamic. 0 is used to pass the sanity check.
-      : autopas::PairwiseFunctor<Particle_T, HydroForceFunctor<Particle_T>>(0.){};
+      : autopas::PairwiseFunctor<Particle_T, HydroForceFunctor<Particle_T>>(cutoff),
+        _cutoffSquared{cutoff * cutoff} {};
 
   virtual std::string getName() override { return "SPHHydroForceFunctor"; }
 
@@ -34,9 +38,7 @@ class HydroForceFunctor : public autopas::PairwiseFunctor<Particle_T, HydroForce
     const std::array<double, 3> dr = i.getR() - j.getR();
     // const PS::F64vec dr = ep_i[i].pos - ep_j[j].pos;
 
-    double cutoff = i.getSmoothingLength() * 2.5;// * sphLib::SPHKernels::getKernelSupportRadius();
-
-    if (autopas::utils::ArrayMath::dot(dr, dr) >= cutoff * cutoff) {
+    if (autopas::utils::ArrayMath::dot(dr, dr) >= _cutoffSquared) {
       return;
     }
 
