@@ -33,6 +33,7 @@ void Initialize(AutoPasContainer &sphSystem, double density_0) {
 void velocityVerletFirstStep(AutoPasContainer &sphSystem, const double dt) {
   using namespace autopas::utils::ArrayMath::literals;
 
+  AUTOPAS_OPENMP(parallel)
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
     part->addV(part->getAcceleration() * dt * 0.5);
     part->addR(part->getV() * dt);
@@ -42,6 +43,7 @@ void velocityVerletFirstStep(AutoPasContainer &sphSystem, const double dt) {
 void velocityVerletSecondStep(AutoPasContainer &sphSystem, const double dt) {
   using namespace autopas::utils::ArrayMath::literals;
 
+  AUTOPAS_OPENMP(parallel)
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
     part->addV(part->getAcceleration() * dt * 0.5);
   }
@@ -50,6 +52,7 @@ void velocityVerletSecondStep(AutoPasContainer &sphSystem, const double dt) {
 void calculateDensity(AutoPasContainer &sphSystem) {
   DensityFunctor<Particle> densityFunctor;
 
+  AUTOPAS_OPENMP(parallel)
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
     part->setDensity(0.);
     densityFunctor.AoSFunctor(*part, *part);
@@ -60,6 +63,7 @@ void calculateDensity(AutoPasContainer &sphSystem) {
 }
 
 void updatePressure(AutoPasContainer &sphSystem, double density_0) {
+  AUTOPAS_OPENMP(parallel)
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
     part->calcPressure(density_0);
   }
@@ -68,6 +72,7 @@ void updatePressure(AutoPasContainer &sphSystem, double density_0) {
 void calculateHydroForce(AutoPasContainer &sphSystem) {
   HydroForceFunctor<Particle> hydroForceFunctor;
 
+  AUTOPAS_OPENMP(parallel)
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
     // self interaction leeds to:
     // 1) vsigmax = 2*part->getSoundSpeed()
@@ -81,6 +86,7 @@ void calculateHydroForce(AutoPasContainer &sphSystem) {
 }
 
 void addExternalForce(AutoPasContainer &sphSystem, const std::array<double, 3> &externalForce) {
+  AUTOPAS_OPENMP(parallel)
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
     part->addAcceleration(externalForce);
   }
