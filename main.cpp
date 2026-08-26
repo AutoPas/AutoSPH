@@ -204,6 +204,9 @@ int main(int argc, char* argv[]) {
   for (double time = 0.; time < t_end; time += dt, ++step) {
     velocityVerletFirstStep(sphSystem, dt);
 
+    auto invalidParticles = sphSystem.updateContainer();
+    addEnteringParticles(sphSystem, invalidParticles);
+
     if (time > forceTimestamps[force_step]) {
       externalForce = autopas::utils::ArrayMath::add(gravity, customForces[force_step]);
       force_step += 1;
@@ -221,10 +224,6 @@ int main(int argc, char* argv[]) {
       // AutoPasLog(INFO, "Number of particles: {}", sphSystem.getNumberOfParticles(autopas::IteratorBehavior::ownedOrHalo));
       vtkWriter.recordTimestep(step, sphSystem, boxMin, boxMax);
     }
-
-    auto invalidParticles = sphSystem.updateContainer();
-    addEnteringParticles(sphSystem, invalidParticles);
   }
-
 }
 
