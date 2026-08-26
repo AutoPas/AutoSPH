@@ -72,7 +72,6 @@ private:
             file << "    <PPointData>\n"
                  << "      <PDataArray Name=\"velocities\" NumberOfComponents=\"3\" format=\"ascii\" type=\"Float32\"/>\n"
                  << "      <PDataArray Name=\"forces\" NumberOfComponents=\"3\" format=\"ascii\" type=\"Float32\"/>\n"
-                 // << "      <PDataArray Name=\"typeIds\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Int32\"/>\n"
                  << "      <PDataArray Name=\"ids\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Int32\"/>\n"
                  << "      <PDataArray Name=\"density\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Float32\"/>\n"
                  << "      <PDataArray Name=\"mass\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Float32\"/>\n"
@@ -119,11 +118,6 @@ private:
             auto f = p->getF(); file << "        " << f[0] << " " << f[1] << " " << f[2] << "\n";
         }
         file << "        </DataArray>\n";
-
-        // IDs & TypeIDs
-        // file << "        <DataArray Name=\"typeIds\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Int32\">\n";
-        // for (auto p = container.begin(autopas::IteratorBehavior::owned); p.isValid(); ++p) { file << "        " << p->getTypeId() << "\n"; }
-        // file << "        </DataArray>\n";
 
         file << "        <DataArray Name=\"ids\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Int32\">\n";
         for (auto p = container.begin(autopas::IteratorBehavior::owned); p.isValid(); ++p) { file << "        " << p->getID() << "\n"; }
