@@ -76,7 +76,6 @@ private:
                  << "      <PDataArray Name=\"ids\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Int32\"/>\n"
                  << "      <PDataArray Name=\"density\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Float32\"/>\n"
                  << "      <PDataArray Name=\"mass\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Float32\"/>\n"
-                 << "      <PDataArray Name=\"smoothing_length\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Float32\"/>\n"
                  << "      <PDataArray Name=\"pressure\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Float32\"/>\n"
                  << "    </PPointData>\n"
                  << "    <PPoints><PDataArray Name=\"positions\" NumberOfComponents=\"3\" format=\"ascii\" type=\"Float32\"/></PPoints>\n";
@@ -136,10 +135,6 @@ private:
 
         file << "        <DataArray Name=\"mass\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Float32\">\n";
         for (auto p = container.begin(autopas::IteratorBehavior::owned); p.isValid(); ++p) { file << "        " << p->getMass() << "\n"; }
-        file << "        </DataArray>\n";
-
-        file << "        <DataArray Name=\"smoothing_length\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Float32\">\n";
-        for (auto p = container.begin(autopas::IteratorBehavior::owned); p.isValid(); ++p) { file << "        " << p->getSmoothingLength() << "\n"; }
         file << "        </DataArray>\n";
 
         file << "        <DataArray Name=\"pressure\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Float32\">\n";
