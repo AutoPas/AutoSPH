@@ -37,6 +37,7 @@ void velocityVerletFirstStep(AutoPasContainer &sphSystem, const double dt) {
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
     part->addV(part->getAcceleration() * dt * 0.5);
     part->addR(part->getV() * dt);
+    part->addDensity(part->getDensityDot() * dt);
   }
 }
 
@@ -49,14 +50,14 @@ void velocityVerletSecondStep(AutoPasContainer &sphSystem, const double dt) {
   }
 }
 
-void calculateDensity(AutoPasContainer &sphSystem) {
+void calculateDensityDot(AutoPasContainer &sphSystem) {
   DensityFunctor<Particle> densityFunctor;
 
   AUTOPAS_OPENMP(parallel)
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
-    part->setDensity(0.);
+    part->setDensityDot(0.);
     densityFunctor.AoSFunctor(*part, *part);
-    part->setDensity(part->getDensity() / 2);
+    part->setDensityDot(part->getDensityDot() / 2);
   }
 
   sphSystem.computeInteractions(&densityFunctor);
@@ -212,8 +213,8 @@ int main(int argc, char* argv[]) {
       force_step += 1;
     }
     generateGhostParticles(sphSystem, cutoff);
-    calculateDensity(sphSystem);
     updatePressure(sphSystem, density);
+    calculateDensityDot(sphSystem);
     calculateHydroForce(sphSystem, cutoff, alpha);
     addExternalForce(sphSystem, externalForce);
 

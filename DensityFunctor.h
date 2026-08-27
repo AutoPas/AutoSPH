@@ -31,15 +31,17 @@ class DensityFunctor : public autopas::PairwiseFunctor<Particle_T, DensityFuncto
     if (i.isDummy() or j.isDummy()) {
       return;
     }
-    const std::array<double, 3> dr = j.getR() - i.getR();  // ep_j[j].pos - ep_i[i].pos;
-    const double density =
-        j.getMass() * SPHKernels::W(dr, i.getSmoothingLength());  // ep_j[j].mass * W(dr, ep_i[i].smth)
-    i.addDensity(density);
+    const std::array<double, 3> dr = i.getR() - j.getR();
+    const std::array<double, 3> dv = i.getV() - j.getV();
+    const double smoothing_length = (i.getSmoothingLength() + j.getSmoothingLength()) * 0.5;
+    const double dv_gradW = autopas::utils::ArrayMath::dot(dv, SPHKernels::gradW(dr, smoothing_length));
+    const double density = j.getMass() * dv_gradW;
+    i.addDensityDot(density);
     if (newton3) {
       // Newton 3:
-      // W is symmetric in dr, so no -dr needed, i.e. we can reuse dr
-      const double density2 = i.getMass() * SPHKernels::W(dr, j.getSmoothingLength());
-      j.addDensity(density2);
+      // We would need dv2 = -dv and dr2 = -dr, but that results in the same dv_gradW
+      const double density2 = i.getMass() * dv_gradW;
+      j.addDensityDot(density2);
     }
   }
 };

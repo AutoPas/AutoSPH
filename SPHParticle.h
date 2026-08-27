@@ -19,6 +19,7 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
   SPHParticle()
       : autopas::ParticleBaseFP64(),
         _density(0.),
+        _density_dot(0.),
         _pressure(0.),
         _mass(0.),
         _smth(0.),
@@ -45,6 +46,7 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
               double smth, double snds)
       : autopas::ParticleBaseFP64(r, v, id),
         _density(0.),
+        _density_dot(0.),
         _pressure(0.),
         _mass(mass),
         _smth(smth),
@@ -74,6 +76,7 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
     posZ,
     smth,
     density,
+    densityDot,
     velX,
     velY,
     velZ,
@@ -92,6 +95,8 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
   double getSmoothingLength() const { return _smth; }
 
   double getDensity() const { return _density; }
+
+  double getDensityDot() const { return _density_dot; }
 
   double getSoundSpeed() const { return _snds; }
 
@@ -113,6 +118,8 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
 
   void setDensity(double density) { _density = density; }
 
+  void setDensityDot(double density_dot) { _density_dot = density_dot; }
+
   void setEnergy(double energy) { _energy = energy; }
 
   void setVel_half(const std::array<double, 3> &vel_half) { SPHParticle::_vel_half = vel_half; }
@@ -122,6 +129,8 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
   void setEngDot(double eng_dot) { _energy_dot = eng_dot; }
 
   void addDensity(double density) { _density += density; }
+
+  void addDensityDot(double density_dot) { _density_dot += density_dot; }
 
   void addAcceleration(const std::array<double, 3> &acc) {
     using namespace autopas::utils::ArrayMath::literals;
@@ -152,6 +161,7 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
                                                 double,  // posZ
                                                 double,  // smth
                                                 double,  // density
+                                                double,  // densityDot
                                                 double,  // velX
                                                 double,  // velY
                                                 double,  // velZ
@@ -193,6 +203,8 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
       return getSmoothingLength();
     } else if constexpr (attribute == AttributeNames::density) {
       return getDensity();
+    } else if constexpr (attribute == AttributeNames::densityDot) {
+      return getDensityDot();
     } else if constexpr (attribute == AttributeNames::velX) {
       return getV()[0];
     } else if constexpr (attribute == AttributeNames::velY) {
@@ -239,6 +251,8 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
       setSmoothingLength(value);
     } else if constexpr (attribute == AttributeNames::density) {
       setDensity(value);
+    } else if constexpr (attribute == AttributeNames::densityDot) {
+      setDensityDot(value);
     } else if constexpr (attribute == AttributeNames::velX) {
       _v[0] = value;
     } else if constexpr (attribute == AttributeNames::velY) {
@@ -267,11 +281,12 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
   }
 
  private:
-  double _density;   // density
-  double _pressure;  // pressure
-  double _mass;      // mass
-  double _smth;      // smoothing length
-  double _snds;      // speed of sound
+  double _density;       // density
+  double _density_dot;   // time derivative of the density
+  double _pressure;      // pressure
+  double _mass;          // mass
+  double _smth;          // smoothing length
+  double _snds;          // speed of sound
 
   // temporaries / helpers
   double _v_sig_max;
