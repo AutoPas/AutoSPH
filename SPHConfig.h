@@ -187,13 +187,12 @@ public:
                      b += boundaryParticleSpacing[dim3]) {
                     position[dim3] = b;
                     position[dim1] = std::nextafter(boxMin[dim1], boxMin[dim1] - 1);
-                    SPHParticle p1(position, particleVelocity, id++, particleMass, smoothingLength, soundSpeed);
-                    p1.setDensity(density);
-                    sphSystem.addHaloParticle(p1);
-                    position[dim1] = std::nextafter(boxMax[dim1], boxMax[dim1] + 1);
-                    SPHParticle p2(position, particleVelocity, id++, particleMass, smoothingLength, soundSpeed);
-                    p2.setDensity(density);
-                    sphSystem.addHaloParticle(p2);
+                    for (size_t i = 0; i < 2; ++i, position[dim1] = std::nextafter(boxMax[dim1], boxMax[dim1] + 1)) {
+                        SPHParticle p(position, particleVelocity, id++, particleMass, smoothingLength, soundSpeed);
+                        p.setDensity(density);
+                        p.setIsBoundary(true);
+                        sphSystem.addHaloParticle(p);
+                    }
                 }
             }
         }
@@ -206,6 +205,7 @@ public:
                 for (size_t k = 0; k < 2; ++k, z = std::nextafter(boxMax[2], boxMax[2] + 1)) {
                     SPHParticle p({x, y, z}, particleVelocity, id++, particleMass, smoothingLength, soundSpeed);
                     p.setDensity(density);
+                    p.setIsBoundary(true);
                     sphSystem.addHaloParticle(p);
                 }
             }

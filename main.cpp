@@ -122,7 +122,7 @@ void generateGhostParticles(AutoPasContainer &sphSystem, double cutoff) {
         Particle ghost = *part;
         ghost.setR(pos);
         ghost.setV(vel);
-        ghost.setIsBoundary(true);
+        ghost.setIsGhost(true);
         ghosts.push_back(ghost);
       }
     }
@@ -223,8 +223,9 @@ int main(int argc, char* argv[]) {
 
     if (step % write_freq == 0) {
       AutoPasLog(INFO, "Iteration {} completed", step);
-      AutoPasLog(INFO, "Number of halo particles: {}", sphSystem.getNumberOfParticles(autopas::IteratorBehavior::halo));
+      // AutoPasLog(INFO, "Number of halo particles: {}", sphSystem.getNumberOfParticles(autopas::IteratorBehavior::halo));
       vtkWriter.recordTimestep(step, sphSystem, boxMin, boxMax, autopas::IteratorBehavior::owned);
+    }
     }
   }
 }

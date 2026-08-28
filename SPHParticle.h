@@ -114,6 +114,10 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
 
   void setIsBoundary(bool isBoundary) { _isBoundary = isBoundary; }
 
+  bool isGhost() const { return _isGhost; }
+
+  void setIsGhost(bool isGhost) { _isGhost = isGhost; }
+
   void setAcceleration(const std::array<double, 3> &acc) { _acc = acc; }
 
   void setDensity(double density) { _density = density; }
@@ -302,4 +306,5 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
   double _eng_half;                 // energy at half time-step
 
   bool _isBoundary = false;
+  bool _isGhost = false;
 };
