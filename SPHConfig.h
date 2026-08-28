@@ -101,7 +101,8 @@ public:
     std::vector<double> getForceTimestamps() { return forceTimestamps; }
     std::vector<std::array<double, 3>> getCustomForces() { return customForces; }
 
-    void SetupContainer(AutoPasContainer &sphSystem, double *dt, double *t_end, int *write_freq, double *_cutoff, double *_density, double *_alpha) {
+    void SetupContainer(AutoPasContainer &sphSystem, double *dt, double *t_end, int *write_freq,
+                        double *_cutoff, double *_lj_cutoff, double *_lj_epsilon, double *_lj_sigma, double *_density, double *_alpha) {
         sphSystem.setBoxMin(boxMin);
         sphSystem.setBoxMax(boxMax);
 
@@ -114,6 +115,9 @@ public:
         *t_end = totalTime + timeStep * 0.5;
         *write_freq = static_cast<int>(std::round(writeFrequency / timeStep));
         *_cutoff = cutoff;
+        *_lj_cutoff = 0.0;
+        *_lj_epsilon = 0.5;
+        *_lj_sigma = 0.5;
         *_density = density;
         *_alpha = alpha;
     }

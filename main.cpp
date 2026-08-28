@@ -70,8 +70,9 @@ void updatePressure(AutoPasContainer &sphSystem, double density_0) {
   }
 }
 
-void calculateHydroForce(AutoPasContainer &sphSystem, double cutoff, double alpha) {
-  HydroForceFunctor<Particle> hydroForceFunctor(cutoff, alpha);
+void calculateHydroForce(AutoPasContainer &sphSystem, double cutoff, double lj_cutoff,
+                         double lj_epsilon, double lj_sigma, double alpha) {
+  HydroForceFunctor<Particle> hydroForceFunctor(cutoff, lj_cutoff, lj_epsilon, lj_sigma, alpha);
 
   AUTOPAS_OPENMP(parallel)
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
@@ -175,8 +176,9 @@ int main(int argc, char* argv[]) {
   std::array<double, 3> boxMin(config.getBoxMin()), boxMax(config.getBoxMax());
   double dt, t_end;
   int write_freq;
-  double cutoff, density, alpha;
-  config.SetupContainer(sphSystem, &dt, &t_end, &write_freq, &cutoff, &density, &alpha);
+  double cutoff, lj_cutoff, lj_epsilon, lj_sigma, density, alpha;
+  config.SetupContainer(sphSystem, &dt, &t_end, &write_freq, &cutoff, &lj_cutoff,
+                        &lj_epsilon, &lj_sigma, &density, &alpha);
 
   std::set<autopas::ContainerOption> allowedContainers{autopas::ContainerOption::linkedCells,
                                                        autopas::ContainerOption::verletLists,
@@ -216,7 +218,7 @@ int main(int argc, char* argv[]) {
     generateGhostParticles(sphSystem, cutoff);
     updatePressure(sphSystem, density);
     calculateDensityDot(sphSystem);
-    calculateHydroForce(sphSystem, cutoff, alpha);
+    calculateHydroForce(sphSystem, cutoff, lj_cutoff, lj_epsilon, lj_sigma, alpha);
     addExternalForce(sphSystem, externalForce);
 
     velocityVerletSecondStep(sphSystem, dt);
@@ -225,7 +227,6 @@ int main(int argc, char* argv[]) {
       AutoPasLog(INFO, "Iteration {} completed", step);
       // AutoPasLog(INFO, "Number of halo particles: {}", sphSystem.getNumberOfParticles(autopas::IteratorBehavior::halo));
       vtkWriter.recordTimestep(step, sphSystem, boxMin, boxMax, autopas::IteratorBehavior::owned);
-    }
     }
   }
 }
