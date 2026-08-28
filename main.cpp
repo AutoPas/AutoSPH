@@ -212,6 +212,7 @@ int main(int argc, char* argv[]) {
       externalForce = autopas::utils::ArrayMath::add(gravity, customForces[force_step]);
       force_step += 1;
     }
+    config.generateBoundaryParticles(sphSystem);
     generateGhostParticles(sphSystem, cutoff);
     updatePressure(sphSystem, density);
     calculateDensityDot(sphSystem);
@@ -222,8 +223,8 @@ int main(int argc, char* argv[]) {
 
     if (step % write_freq == 0) {
       AutoPasLog(INFO, "Iteration {} completed", step);
-      // AutoPasLog(INFO, "Number of particles: {}", sphSystem.getNumberOfParticles(autopas::IteratorBehavior::ownedOrHalo));
-      vtkWriter.recordTimestep(step, sphSystem, boxMin, boxMax);
+      AutoPasLog(INFO, "Number of halo particles: {}", sphSystem.getNumberOfParticles(autopas::IteratorBehavior::halo));
+      vtkWriter.recordTimestep(step, sphSystem, boxMin, boxMax, autopas::IteratorBehavior::owned);
     }
   }
 }

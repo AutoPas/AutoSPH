@@ -37,7 +37,11 @@ private:
     double smoothingLength;
     double soundSpeed;
     double alpha;
+
     std::array<double, 3> particleVelocity{0.0, 0.0, 0.0};
+    std::array<double, 3> boundaryParticleSpacing{};
+    double particleMass;
+    unsigned int total_num_particles;
 
 public:
     SPHConfig() = default;
@@ -116,30 +120,30 @@ public:
 
     void SetupParticles(AutoPasContainer &sphSystem) {
         unsigned int i = 0;
-        unsigned int total_num_particles = particleNum[0] * particleNum[1] * particleNum[2];
-        double x, y, z;
         double num_div;
         double particlesVolume = 1;
-        double particleMass;
         std::array<double, 3> particleSpacing;
 
         AutoPasLog(INFO, "Setup started");
+
+        total_num_particles = particleNum[0] * particleNum[1] * particleNum[2];
 
         for (size_t dim = 0; dim < 3; dim++) {
             num_div = particleNum[dim] - 1;
             if (particleBoxMin[dim] <= boxMin[dim]) {
                 particleBoxMin[dim] = boxMin[dim];
-                num_div += .5;
+                num_div += 1;
             }
             if (particleBoxMax[dim] >= boxMax[dim]) {
                 particleBoxMax[dim] = boxMax[dim];
-                num_div += .5;
+                num_div += 1;
             }
 
             particleSpacing[dim] = (particleBoxMax[dim] - particleBoxMin[dim]) / num_div;
+            boundaryParticleSpacing[dim] = (boxMax[dim] - boxMin[dim]) / std::round((boxMax[dim] - boxMin[dim]) / particleSpacing[dim]);
 
-            if (particleBoxMin[dim] == boxMin[dim]) { particleBoxMin[dim] += 0.5 * particleSpacing[dim]; }
-            if (particleBoxMax[dim] == boxMax[dim]) { particleBoxMax[dim] -= 0.5 * particleSpacing[dim]; }
+            if (particleBoxMin[dim] == boxMin[dim]) { particleBoxMin[dim] += 1 * particleSpacing[dim]; }
+            if (particleBoxMax[dim] == boxMax[dim]) { particleBoxMax[dim] -= 1 * particleSpacing[dim]; }
 
             particlesVolume *= particleBoxMax[dim] - particleBoxMin[dim];
 
@@ -162,5 +166,49 @@ public:
         AutoPasLog(INFO, "Setup completed");
         AutoPasLog(INFO, "Number of particles (i): {}", i);
         AutoPasLog(INFO, "Number of particles: {}", sphSystem.getNumberOfParticles());
+    }
+
+    void generateBoundaryParticles(AutoPasContainer &sphSystem) {
+        std::array<double, 3> position{};
+        size_t dim1, dim2, dim3;
+        int id = 0;
+        double a_max, b_max;
+        double x, y, z;
+
+        for (dim1 = 0; dim1 < 3; dim1++) {
+            dim2 = (dim1 + 1) % 3;
+            dim3 = (dim1 + 2) % 3;
+            a_max = boxMax[dim2] + 0.5 * boundaryParticleSpacing[dim2];
+            b_max = boxMax[dim3] - 0.5 * boundaryParticleSpacing[dim3];
+
+            for (double a = boxMin[dim2]; a < a_max; a += boundaryParticleSpacing[dim2]) {
+                position[dim2] = a;
+                for (double b = boxMin[dim3] + boundaryParticleSpacing[dim3]; b < b_max;
+                     b += boundaryParticleSpacing[dim3]) {
+                    position[dim3] = b;
+                    position[dim1] = std::nextafter(boxMin[dim1], boxMin[dim1] - 1);
+                    SPHParticle p1(position, particleVelocity, id++, particleMass, smoothingLength, soundSpeed);
+                    p1.setDensity(density);
+                    sphSystem.addHaloParticle(p1);
+                    position[dim1] = std::nextafter(boxMax[dim1], boxMax[dim1] + 1);
+                    SPHParticle p2(position, particleVelocity, id++, particleMass, smoothingLength, soundSpeed);
+                    p2.setDensity(density);
+                    sphSystem.addHaloParticle(p2);
+                }
+            }
+        }
+        // 8 corners
+        x = std::nextafter(boxMin[0], boxMin[0] - 1);
+        for (size_t i = 0; i < 2; ++i, x = std::nextafter(boxMax[0], boxMax[0] + 1)) {
+            y = std::nextafter(boxMin[1], boxMin[1] - 1);
+            for (size_t j = 0; j < 2; ++j, y = std::nextafter(boxMax[1], boxMax[1] + 1)) {
+                z = std::nextafter(boxMin[2], boxMin[2] - 1);
+                for (size_t k = 0; k < 2; ++k, z = std::nextafter(boxMax[2], boxMax[2] + 1)) {
+                    SPHParticle p({x, y, z}, particleVelocity, id++, particleMass, smoothingLength, soundSpeed);
+                    p.setDensity(density);
+                    sphSystem.addHaloParticle(p);
+                }
+            }
+        }
     }
 };

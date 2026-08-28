@@ -33,9 +33,10 @@ public:
     void recordTimestep(size_t currentIteration, 
                         const autopas::AutoPas<ParticleType> &autoPasContainer,
                         const std::array<double, 3>& boxMin,
-                        const std::array<double, 3>& boxMax) const {
+                        const std::array<double, 3>& boxMax,
+                        const autopas::IteratorBehavior iterator = autopas::IteratorBehavior::owned) const {
 
-        recordParticleStates(currentIteration, autoPasContainer);
+        recordParticleStates(currentIteration, autoPasContainer, iterator);
         recordDomainSubdivision(currentIteration, boxMin, boxMax);
     }
 
@@ -88,7 +89,7 @@ private:
              << "  </PUnstructuredGrid>\n</VTKFile>\n";
     }
 
-    void recordParticleStates(size_t iteration, const autopas::AutoPas<ParticleType> &container) const {
+    void recordParticleStates(size_t iteration, const autopas::AutoPas<ParticleType> &container, autopas::IteratorBehavior iterator) const {
         createPvtuHeader("Particles", iteration, true);
 
         std::ostringstream filename;
@@ -97,7 +98,7 @@ private:
         std::ofstream file(filename.str(), std::ios::out | std::ios::binary);
         if (!file.is_open()) throw std::runtime_error("Failed to open particle file");
 
-        size_t numParticles = container.getNumberOfParticles(autopas::IteratorBehavior::owned);
+        size_t numParticles = container.getNumberOfParticles(iterator);
 
         file << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n"
              << "<VTKFile byte_order=\"LittleEndian\" type=\"UnstructuredGrid\" version=\"0.1\">\n"
@@ -107,32 +108,32 @@ private:
 
         // Velocities
         file << "        <DataArray Name=\"velocities\" NumberOfComponents=\"3\" format=\"ascii\" type=\"Float32\">\n";
-        for (auto p = container.begin(autopas::IteratorBehavior::owned); p.isValid(); ++p) {
+        for (auto p = container.begin(iterator); p.isValid(); ++p) {
             auto v = p->getV(); file << "        " << v[0] << " " << v[1] << " " << v[2] << "\n";
         }
         file << "        </DataArray>\n";
 
         // Forces
         file << "        <DataArray Name=\"forces\" NumberOfComponents=\"3\" format=\"ascii\" type=\"Float32\">\n";
-        for (auto p = container.begin(autopas::IteratorBehavior::owned); p.isValid(); ++p) {
+        for (auto p = container.begin(iterator); p.isValid(); ++p) {
             auto f = p->getF(); file << "        " << f[0] << " " << f[1] << " " << f[2] << "\n";
         }
         file << "        </DataArray>\n";
 
         file << "        <DataArray Name=\"ids\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Int32\">\n";
-        for (auto p = container.begin(autopas::IteratorBehavior::owned); p.isValid(); ++p) { file << "        " << p->getID() << "\n"; }
+        for (auto p = container.begin(iterator); p.isValid(); ++p) { file << "        " << p->getID() << "\n"; }
         file << "        </DataArray>\n";
 
         file << "        <DataArray Name=\"density\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Float32\">\n";
-        for (auto p = container.begin(autopas::IteratorBehavior::owned); p.isValid(); ++p) { file << "        " << p->getDensity() << "\n"; }
+        for (auto p = container.begin(iterator); p.isValid(); ++p) { file << "        " << p->getDensity() << "\n"; }
         file << "        </DataArray>\n";
 
         file << "        <DataArray Name=\"mass\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Float32\">\n";
-        for (auto p = container.begin(autopas::IteratorBehavior::owned); p.isValid(); ++p) { file << "        " << p->getMass() << "\n"; }
+        for (auto p = container.begin(iterator); p.isValid(); ++p) { file << "        " << p->getMass() << "\n"; }
         file << "        </DataArray>\n";
 
         file << "        <DataArray Name=\"pressure\" NumberOfComponents=\"1\" format=\"ascii\" type=\"Float32\">\n";
-        for (auto p = container.begin(autopas::IteratorBehavior::owned); p.isValid(); ++p) { file << "        " << p->getPressure() + 100000.0 << "\n"; }
+        for (auto p = container.begin(iterator); p.isValid(); ++p) { file << "        " << p->getPressure() + 100000.0 << "\n"; }
         file << "        </DataArray>\n";
 
         file << "      </PointData>\n<CellData/>\n<Points>\n"
@@ -140,7 +141,7 @@ private:
 
         // Positions with boundary dynamic precision logic kept intact
         const auto boxMax = container.getBoxMax();
-        for (auto p = container.begin(autopas::IteratorBehavior::owned); p.isValid(); ++p) {
+        for (auto p = container.begin(iterator); p.isValid(); ++p) {
             auto pos = p->getR();
             file << "        ";
             for(int d=0; d<3; ++d) {
