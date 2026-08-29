@@ -53,6 +53,8 @@ public:
     return terminalWidth;
   }
   void printProgress(size_t iterationProgress, size_t maxIterations) {
+    if (not showProgressBar) { return; }
+
     // percentage of iterations complete
     const double fractionDone = static_cast<double>(iterationProgress) / static_cast<double>(maxIterations);
 
