@@ -16,6 +16,7 @@
 #include "HydroForceFunctor.h"
 #include "SimpleVtkWriter.h"
 #include "SPHConfig.h"
+#include "TerminalOutput.h"
 
 #include "autopas/utils/ArrayMath.h"
 
@@ -200,9 +201,11 @@ int main(int argc, char* argv[]) {
   Initialize(sphSystem, density);
 
   SimpleVtkWriter vtkWriter(config.getSessionName(), config.getOutputFolder(), config.getMaxDigits());
+  TerminalOutput terminalOutput;
 
   size_t step = 0;
   size_t force_step = 0;
+  const size_t maxIterations = static_cast<size_t>(t_end/dt);
 
   for (double time = 0.; time < t_end; time += dt, ++step) {
     velocityVerletFirstStep(sphSystem, dt);
@@ -224,8 +227,9 @@ int main(int argc, char* argv[]) {
     velocityVerletSecondStep(sphSystem, dt);
 
     if (step % write_freq == 0) {
-      AutoPasLog(INFO, "Iteration {} completed", step);
+      // AutoPasLog(INFO, "Iteration {} completed", step);
       // AutoPasLog(INFO, "Number of halo particles: {}", sphSystem.getNumberOfParticles(autopas::IteratorBehavior::halo));
+      terminalOutput.printProgress(step, maxIterations);
       vtkWriter.recordTimestep(step, sphSystem, boxMin, boxMax, autopas::IteratorBehavior::owned);
     }
   }
