@@ -11,7 +11,7 @@
 using AutoPasContainer = autopas::AutoPas<SPHParticle>;
 
 class SPHConfig {
-private:
+ private:
     std::string outputFolder;
     std::string sessionName;
     unsigned int maxDigits;
@@ -43,7 +43,11 @@ private:
     double particleMass;
     unsigned int total_num_particles;
 
-public:
+    double lj_cutoff;
+    double lj_epsilon;
+    double lj_sigma;
+
+ public:
     SPHConfig() = default;
 
     bool loadFromFile(const std::string& filename) {
@@ -85,6 +89,10 @@ public:
             soundSpeed = config["particles"]["sound_speed"].as<double>();
             alpha = config["particles"]["alpha"].as<double>();
 
+            lj_cutoff = config["LJ potential"]["lj_cutoff"].as<double>();
+            lj_epsilon = config["LJ potential"]["lj_epsilon"].as<double>();
+            lj_sigma = config["LJ potential"]["lj_sigma"].as<double>();
+
             return true;
         } catch (const YAML::Exception& e) {
             std::cerr << "Error parsing YAML file: " << e.what() << std::endl;
@@ -102,7 +110,8 @@ public:
     std::vector<std::array<double, 3>> getCustomForces() { return customForces; }
 
     void SetupContainer(AutoPasContainer &sphSystem, double *dt, double *t_end, int *write_freq,
-                        double *_cutoff, double *_lj_cutoff, double *_lj_epsilon, double *_lj_sigma, double *_density, double *_alpha) {
+                        double *_cutoff, double *_lj_cutoff, double *_lj_epsilon, double *_lj_sigma,
+                        double *_density, double *_alpha) {
         sphSystem.setBoxMin(boxMin);
         sphSystem.setBoxMax(boxMax);
 
@@ -115,9 +124,9 @@ public:
         *t_end = totalTime + timeStep * 0.5;
         *write_freq = static_cast<int>(std::round(writeFrequency / timeStep));
         *_cutoff = cutoff;
-        *_lj_cutoff = 0.0;
-        *_lj_epsilon = 0.5;
-        *_lj_sigma = 0.5;
+        *_lj_cutoff = lj_cutoff;
+        *_lj_epsilon = lj_epsilon;
+        *_lj_sigma = lj_sigma;
         *_density = density;
         *_alpha = alpha;
     }

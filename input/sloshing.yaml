@@ -38,3 +38,8 @@ particles:
   sound_speed: 20.0
 
   alpha: 0.05  # artificial viscosity coefficient
+
+LJ potential:  # Lennard Jones potential applied only by the boundary particles
+  lj_cutoff: 0.0
+  lj_epsilon: 0.5
+  lj_sigma: 0.5
