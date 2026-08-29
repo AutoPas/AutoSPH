@@ -93,7 +93,7 @@ class HydroForceFunctor : public autopas::PairwiseFunctor<Particle_T, HydroForce
       lj6 *= lj6 * lj6;
       lj6 *= lj6;
       double lj12 = lj6 * lj6;
-      double fac = 24 * _lj_epsilon * (lj12 - lj6) * inv_dist * inv_dist;
+      double fac = -24 * _lj_epsilon * (lj12 - lj6) * inv_dist * inv_dist;
       std::array<double, 3> f = dr * fac;
       i.addAcceleration(f);
     }
