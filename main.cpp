@@ -104,10 +104,10 @@ void generateGhostParticles(AutoPasContainer &sphSystem, double cutoff) {
   double max_d;
 
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
-    auto pos = part->getR();
-    auto vel = part->getV();
-
     for (size_t dim = 0; dim < 3; dim++) {
+      auto pos = part->getR();
+      auto vel = part->getV();
+
       needs_ghost = false;
       min_d = pos[dim] - boxMin[dim];
       max_d = boxMax[dim] - pos[dim];
@@ -146,11 +146,11 @@ void addEnteringParticles(AutoPasContainer &sphSystem, std::vector<Particle> &in
       if (pos[dim] < boxMin[dim]) {
         // has to be smaller than boxMax
         pos[dim] = std::min(std::nextafter(boxMax[dim], -1), boxMin[dim] + (boxMin[dim] - pos[dim]));
-        vel[dim] *= -.9; // -1 would be a perfectly reflective boundary, decimal used as damping
+        vel[dim] *= -1;
       } else if (pos[dim] >= boxMax[dim]) {
         // should at least be boxMin
         pos[dim] = std::max(boxMin[dim], boxMax[dim] - (pos[dim] - boxMax[dim]));
-        vel[dim] *= -.9;
+        vel[dim] *= -1;
       }
     }
     p.setR(pos);
