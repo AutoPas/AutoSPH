@@ -269,5 +269,7 @@ int main(int argc, char* argv[]) {
       vtkWriter.recordTimestep(step, sphSystem, boxMin, boxMax, autopas::IteratorBehavior::owned);
     }
   }
+
+  AutoPasLog(INFO, "Simulation completed");
 }
 
