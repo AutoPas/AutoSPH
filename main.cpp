@@ -95,38 +95,74 @@ void addExternalForce(AutoPasContainer &sphSystem, const std::array<double, 3> &
   }
 }
 
+bool calculateGhostPosVel(double &pos, double &vel, double boxMin, double boxMax, double cutoff) {
+  double min_d = pos - boxMin;
+  double max_d = boxMax - pos;
+
+  if (min_d < cutoff & min_d > 0) {
+    pos = -min_d; // Mirrored position
+    vel = -vel; // Reverse normal velocity (no-slip)
+    return true;
+  } else if (max_d < cutoff & max_d > 0) {
+    pos = boxMax + max_d; // Mirrored position
+    vel = -vel; // Reverse normal velocity (no-slip)
+    return true;
+  }
+  return false;
+}
+
+
 void generateGhostParticles(AutoPasContainer &sphSystem, double cutoff) {
   std::vector<Particle> ghosts;
   std::array<double, 3> boxMin = sphSystem.getBoxMin();
   std::array<double, 3> boxMax = sphSystem.getBoxMax();
+  std::array<double, 3> newPosition, newVelocity;
   bool needs_ghost;
-  double min_d;
-  double max_d;
+  double pos, vel;
 
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
+    std::vector<std::array<double, 3>> positions = { part->getR() };
+    std::vector<std::array<double, 3>> velocities = { part->getV() };
     for (size_t dim = 0; dim < 3; dim++) {
-      auto pos = part->getR();
-      auto vel = part->getV();
-
-      needs_ghost = false;
-      min_d = pos[dim] - boxMin[dim];
-      max_d = boxMax[dim] - pos[dim];
-      if (min_d < cutoff & min_d > 0) {
-        needs_ghost = true;
-        pos[dim] = -min_d; // Mirrored position
-        vel[dim] = -vel[dim]; // Reverse normal velocity (no-slip)
-      } else if (max_d < cutoff & max_d > 0) {
-        needs_ghost = true;
-        pos[dim] = boxMax[dim] + max_d; // Mirrored position
-        vel[dim] = -vel[dim]; // Reverse normal velocity (no-slip)
+      pos = positions[0][dim];
+      vel = velocities[0][dim];
+      if (calculateGhostPosVel(pos, vel, boxMin[dim], boxMax[dim], cutoff)){
+        newPosition = positions[0];
+        newVelocity = velocities[0];
+        newPosition[dim] = pos;
+        newVelocity[dim] = vel;
+        positions.push_back(newPosition);
+        velocities.push_back(newVelocity);
+        for (size_t dim2 = dim + 1; dim2 < 3; dim2++) {
+          pos = positions[0][dim2];
+          vel = velocities[0][dim2];
+          if (calculateGhostPosVel(pos, vel, boxMin[dim2], boxMax[dim2], cutoff)){
+            newPosition[dim2] = pos;
+            newVelocity[dim2] = vel;
+            positions.push_back(newPosition);
+            velocities.push_back(newVelocity);
+            for (size_t dim3 = dim2 + 1; dim3 < 3; dim3++) {
+              pos = positions[0][dim3];
+              vel = velocities[0][dim3];
+              if (calculateGhostPosVel(pos, vel, boxMin[dim3], boxMax[dim3], cutoff)){
+                newPosition[dim3] = pos;
+                newVelocity[dim3] = vel;
+                positions.push_back(newPosition);
+                velocities.push_back(newVelocity);
+                newPosition = positions[1];
+                newVelocity = velocities[1];
+              }
+            }
+          }
+        }
       }
-      if (needs_ghost){
+    }
+    for (size_t i = 1; i < positions.size(); ++i) {
         Particle ghost = *part;
-        ghost.setR(pos);
-        ghost.setV(vel);
+        ghost.setR(positions[i]);
+        ghost.setV(velocities[i]);
         ghost.setIsGhost(true);
         ghosts.push_back(ghost);
-      }
     }
   }
   for (auto &g : ghosts) {
