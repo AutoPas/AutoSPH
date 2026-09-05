@@ -199,13 +199,36 @@ class SPHConfig {
                 for (double b = boxMin[dim3] + boundaryParticleSpacing[dim3]; b < b_max;
                      b += boundaryParticleSpacing[dim3]) {
                     position[dim3] = b;
+
+                    // position[dim1] = std::nextafter(boxMin[dim1], boxMin[dim1] - 1) - boundaryParticleSpacing[dim1];
+                    // SPHParticle p1(position, particleVelocity, id++, particleMass, smoothingLength, soundSpeed);
+                    // p1.setDensity(density);
+                    // p1.setIsBoundary(true);
+                    // sphSystem.addHaloParticle(p1);
+
                     position[dim1] = std::nextafter(boxMin[dim1], boxMin[dim1] - 1);
-                    for (size_t i = 0; i < 2; ++i, position[dim1] = std::nextafter(boxMax[dim1], boxMax[dim1] + 1)) {
-                        SPHParticle p(position, particleVelocity, id++, particleMass, smoothingLength, soundSpeed);
-                        p.setDensity(density);
-                        p.setIsBoundary(true);
-                        sphSystem.addHaloParticle(p);
-                    }
+                    SPHParticle p2(position, particleVelocity, id++, particleMass, smoothingLength, soundSpeed);
+                    p2.setDensity(density);
+                    p2.setIsBoundary(true);
+                    sphSystem.addHaloParticle(p2);
+
+                    position[dim1] = std::nextafter(boxMax[dim1], boxMax[dim1] + 1);
+                    SPHParticle p3(position, particleVelocity, id++, particleMass, smoothingLength, soundSpeed);
+                    p3.setDensity(density);
+                    p3.setIsBoundary(true);
+                    sphSystem.addHaloParticle(p3);
+
+                    // position[dim1] = std::nextafter(boxMax[dim1], boxMax[dim1] + 1) + boundaryParticleSpacing[dim1];
+                    // SPHParticle p4(position, particleVelocity, id++, particleMass, smoothingLength, soundSpeed);
+                    // p4.setDensity(density);
+                    // p4.setIsBoundary(true);
+                    // sphSystem.addHaloParticle(p4);
+                //     for (size_t i = 0; i < 2; ++i, position[dim1] = std::nextafter(boxMax[dim1], boxMax[dim1] + 1)) {
+                //         SPHParticle p(position, particleVelocity, id++, particleMass, smoothingLength, soundSpeed);
+                //         p.setDensity(density);
+                //         p.setIsBoundary(true);
+                //         sphSystem.addHaloParticle(p);
+                //     }
                 }
             }
         }
