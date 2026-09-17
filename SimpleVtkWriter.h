@@ -7,16 +7,18 @@
 #include <iomanip>
 #include <cmath>
 #include <limits>
+#include <filesystem>
 #include <sys/stat.h>
 #include "autopas/AutoPas.h"
 #include "SPHParticle.h"
 // #include "src/TypeDefinitions.h" // Ensure this contains your ParticleType definition
 
+namespace fs = std::filesystem;
 using ParticleType = SPHParticle;
 
 class SimpleVtkWriter {
 public:
-    SimpleVtkWriter(std::string sessionName, std::string outputFolder, int maxDigits)
+    SimpleVtkWriter(std::string sessionName, std::string outputFolder, int maxDigits, const std::string &configPath = "")
         : _sessionName(std::move(sessionName)), 
           _outputFolder(std::move(outputFolder)), 
           _maxDigits(maxDigits) {
@@ -27,6 +29,15 @@ public:
         tryCreateFolder(_outputFolder, "./");
         tryCreateFolder(_sessionName, _outputFolder);
         tryCreateFolder("data", _sessionFolderPath);
+
+        if (!configPath.empty() && fs::exists(configPath)) {
+            std::string destConfigPath = _sessionFolderPath + _sessionName + ".yaml";
+            try {
+                fs::copy_file(configPath, destConfigPath, fs::copy_options::overwrite_existing);
+            } catch (const fs::filesystem_error &e) {
+                AutoPasLog(WARN, "Failed to copy config file to output folder");
+            }
+        }
     }
 
     // Pass boxMin and boxMax directly instead of using a decomposition object

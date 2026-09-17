@@ -235,7 +235,7 @@ int main(int argc, char* argv[]) {
   config.SetupParticles(sphSystem);
   Initialize(sphSystem, density);
 
-  SimpleVtkWriter vtkWriter(config.getSessionName(), config.getOutputFolder(), config.getMaxDigits());
+  SimpleVtkWriter vtkWriter(config.getSessionName(), config.getOutputFolder(), config.getMaxDigits(), configFilePath);
   TerminalOutput terminalOutput;
 
   HydroForceFunctor<Particle> hydroForceFunctor(cutoff, lj_cutoff, lj_epsilon, lj_sigma, alpha, beta);
