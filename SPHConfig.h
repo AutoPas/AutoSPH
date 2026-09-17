@@ -37,6 +37,7 @@ class SPHConfig {
     double smoothingLength;
     double soundSpeed;
     double alpha;
+    double beta;
 
     std::array<double, 3> particleVelocity{0.0, 0.0, 0.0};
     std::array<double, 3> boundaryParticleSpacing{};
@@ -88,6 +89,7 @@ class SPHConfig {
             smoothingLength = config["particles"]["smoothing_length"].as<double>();
             soundSpeed = config["particles"]["sound_speed"].as<double>();
             alpha = config["particles"]["alpha"].as<double>();
+            beta = config["particles"]["beta"].as<double>();
 
             lj_cutoff = config["LJ potential"]["lj_cutoff"].as<double>();
             lj_epsilon = config["LJ potential"]["lj_epsilon"].as<double>();
@@ -111,7 +113,7 @@ class SPHConfig {
 
     void SetupContainer(AutoPasContainer &sphSystem, double *dt, double *t_end, int *write_freq,
                         double *_cutoff, double *_lj_cutoff, double *_lj_epsilon, double *_lj_sigma,
-                        double *_density, double *_alpha) {
+                        double *_density, double *_alpha, double *_beta) {
         sphSystem.setBoxMin(boxMin);
         sphSystem.setBoxMax(boxMax);
 
@@ -129,6 +131,7 @@ class SPHConfig {
         *_lj_sigma = lj_sigma;
         *_density = density;
         *_alpha = alpha;
+        *_beta = beta;
     }
 
     void SetupParticles(AutoPasContainer &sphSystem) {

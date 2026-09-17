@@ -71,9 +71,7 @@ void updatePressure(AutoPasContainer &sphSystem, double density_0) {
   }
 }
 
-void calculateHydroForce(AutoPasContainer &sphSystem, double cutoff, double lj_cutoff,
-                         double lj_epsilon, double lj_sigma, double alpha) {
-  HydroForceFunctor<Particle> hydroForceFunctor(cutoff, lj_cutoff, lj_epsilon, lj_sigma, alpha);
+void calculateHydroForce(AutoPasContainer &sphSystem, HydroForceFunctor<Particle> &hydroForceFunctor) {
 
   AUTOPAS_OPENMP(parallel)
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
@@ -213,9 +211,9 @@ int main(int argc, char* argv[]) {
   std::array<double, 3> boxMin(config.getBoxMin()), boxMax(config.getBoxMax());
   double dt, t_end;
   int write_freq;
-  double cutoff, lj_cutoff, lj_epsilon, lj_sigma, density, alpha;
+  double cutoff, lj_cutoff, lj_epsilon, lj_sigma, density, alpha, beta;
   config.SetupContainer(sphSystem, &dt, &t_end, &write_freq, &cutoff, &lj_cutoff,
-                        &lj_epsilon, &lj_sigma, &density, &alpha);
+                        &lj_epsilon, &lj_sigma, &density, &alpha, &beta);
 
   std::set<autopas::ContainerOption> allowedContainers{autopas::ContainerOption::linkedCells,
                                                        autopas::ContainerOption::verletLists,
@@ -239,6 +237,8 @@ int main(int argc, char* argv[]) {
   SimpleVtkWriter vtkWriter(config.getSessionName(), config.getOutputFolder(), config.getMaxDigits());
   TerminalOutput terminalOutput;
 
+  HydroForceFunctor<Particle> hydroForceFunctor(cutoff, lj_cutoff, lj_epsilon, lj_sigma, alpha, beta);
+
   size_t step = 0;
   size_t force_step = 0;
   const size_t maxIterations = static_cast<size_t>(t_end/dt);
@@ -257,7 +257,7 @@ int main(int argc, char* argv[]) {
     generateGhostParticles(sphSystem, cutoff);
     updatePressure(sphSystem, density);
     calculateDensityDot(sphSystem);
-    calculateHydroForce(sphSystem, cutoff, lj_cutoff, lj_epsilon, lj_sigma, alpha);
+    calculateHydroForce(sphSystem, hydroForceFunctor);
     addExternalForce(sphSystem, externalForce);
 
     velocityVerletSecondStep(sphSystem, dt);

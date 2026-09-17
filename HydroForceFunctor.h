@@ -8,17 +8,19 @@ class HydroForceFunctor : public autopas::PairwiseFunctor<Particle_T, HydroForce
   const double _lj_epsilon;
   const double _lj_sigma;
   const double _alpha;
+  const double _beta;
 
  public:
 
-  HydroForceFunctor(double cutoff, double lj_cutoff, double lj_epsilon, double lj_sigma, double alpha)
+  HydroForceFunctor(double cutoff, double lj_cutoff, double lj_epsilon, double lj_sigma, double alpha, double beta)
       // the actual cutoff used is dynamic. 0 is used to pass the sanity check.
       : autopas::PairwiseFunctor<Particle_T, HydroForceFunctor<Particle_T>>(cutoff),
         _cutoff{cutoff},
         _lj_cutoff{lj_cutoff},
         _lj_epsilon{lj_epsilon},
         _lj_sigma{lj_sigma},
-        _alpha{alpha} {};
+        _alpha{alpha},
+        _beta{beta} {};
 
   virtual std::string getName() override { return "SPHHydroForceFunctor"; }
 
@@ -56,20 +58,14 @@ class HydroForceFunctor : public autopas::PairwiseFunctor<Particle_T, HydroForce
     // const PS::F64vec dv = ep_i[i].vel - ep_j[j].vel;
 
     double dvdr = autopas::utils::ArrayMath::dot(dv, dr);
-    const double w_ij = (dvdr < 0) ? dvdr / autopas::utils::ArrayMath::L2Norm(dr) : 0;
-    // const PS::F64 w_ij = (dv * dr < 0) ? dv * dr / sqrt(dr * dr) : 0;
 
-    const double v_sig = i.getSoundSpeed() + j.getSoundSpeed() - 3.0 * w_ij;
-    // const PS::F64 v_sig = ep_i[i].snds + ep_j[j].snds - 3.0 * w_ij;
+    const double h_ij = 0.5 * (i.getSmoothingLength() + j.getSmoothingLength());
+    const double c_ij = 0.5 * (i.getSoundSpeed() + j.getSoundSpeed());
+    const double rho_ij = 0.5 * (i.getDensity() + j.getDensity());
+    const double varphi = 0.1 * h_ij;
+    const double phi_ij = h_ij * dvdr / (autopas::utils::ArrayMath::dot(dr, dr) + varphi);
 
-    i.checkAndSetVSigMax(v_sig);
-    if (newton3) {
-      j.checkAndSetVSigMax(v_sig);  // Newton 3
-      // v_sig_max = std::max(v_sig_max, v_sig);
-    }
-    const double AV = -_alpha * v_sig * w_ij / (0.5 * (i.getDensity() + j.getDensity()));
-    // const PS::F64 AV = - 0.5 * v_sig * w_ij / (0.5 * (ep_i[i].dens +
-    // ep_j[j].dens));
+    const double AV = (dvdr < 0) ? (-_alpha * c_ij * phi_ij + _beta * phi_ij * phi_ij) / rho_ij : 0;
 
     const std::array<double, 3> gradW_ij =
         (SPHKernels::gradW(dr, i.getSmoothingLength()) + SPHKernels::gradW(dr, j.getSmoothingLength())) * 0.5;
