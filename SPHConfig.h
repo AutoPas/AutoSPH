@@ -35,6 +35,8 @@ class SPHConfig {
     std::array<double, 3> particleBoxMax{};
     std::array<unsigned int, 3> particleNum{};
     double smoothingLength;
+    double boundarySpacing;
+    double boundaryPressure;
     double soundSpeed;
     double alpha;
     double beta;
@@ -87,6 +89,8 @@ class SPHConfig {
             particleNum = config["particles"]["particle_num"].as<std::array<unsigned int, 3>>();
 
             smoothingLength = config["particles"]["smoothing_length"].as<double>();
+            boundarySpacing = config["particles"]["boundary_spacing"].as<double>() * smoothingLength;
+            boundaryPressure = config["particles"]["boundary_pressure"].as<double>();
             soundSpeed = config["particles"]["sound_speed"].as<double>();
             alpha = config["particles"]["alpha"].as<double>();
             beta = config["particles"]["beta"].as<double>();
@@ -113,7 +117,7 @@ class SPHConfig {
 
     void SetupContainer(AutoPasContainer &sphSystem, double *dt, double *t_end, int *write_freq,
                         double *_cutoff, double *_lj_cutoff, double *_lj_epsilon, double *_lj_sigma,
-                        double *_density, double *_alpha, double *_beta) {
+                        double *_density, double *_alpha, double *_beta, double *_boundarySpacing, double *_boundaryPressure) {
         sphSystem.setBoxMin(boxMin);
         sphSystem.setBoxMax(boxMax);
 
@@ -132,6 +136,8 @@ class SPHConfig {
         *_density = density;
         *_alpha = alpha;
         *_beta = beta;
+        *_boundarySpacing = boundarySpacing;
+        *_boundaryPressure = boundaryPressure;
     }
 
     void SetupParticles(AutoPasContainer &sphSystem) {
@@ -209,13 +215,13 @@ class SPHConfig {
                     // p1.setIsBoundary(true);
                     // sphSystem.addHaloParticle(p1);
 
-                    position[dim1] = std::nextafter(boxMin[dim1], boxMin[dim1] - 1);
+                    position[dim1] = boxMin[dim1] - boundarySpacing;
                     SPHParticle p2(position, particleVelocity, id++, particleMass, smoothingLength, soundSpeed);
                     p2.setDensity(density);
                     p2.setIsBoundary(true);
                     sphSystem.addHaloParticle(p2);
 
-                    position[dim1] = std::nextafter(boxMax[dim1], boxMax[dim1] + 1);
+                    position[dim1] = boxMax[dim1] + boundarySpacing;
                     SPHParticle p3(position, particleVelocity, id++, particleMass, smoothingLength, soundSpeed);
                     p3.setDensity(density);
                     p3.setIsBoundary(true);

@@ -93,16 +93,16 @@ void addExternalForce(AutoPasContainer &sphSystem, const std::array<double, 3> &
   }
 }
 
-bool calculateGhostPosVel(double &pos, double &vel, double boxMin, double boxMax, double cutoff) {
+bool calculateGhostPosVel(double &pos, double &vel, double boxMin, double boxMax, double cutoff, double boundarySpacing) {
   double min_d = pos - boxMin;
   double max_d = boxMax - pos;
 
-  if (min_d < cutoff & min_d > 0) {
-    pos = -min_d; // Mirrored position
+  if (min_d < cutoff) {
+    pos = boxMin - min_d - boundarySpacing; // Mirrored position
     vel = -vel; // Reverse normal velocity (no-slip)
     return true;
-  } else if (max_d < cutoff & max_d > 0) {
-    pos = boxMax + max_d; // Mirrored position
+  } else if (max_d < cutoff) {
+    pos = boxMax + max_d + boundarySpacing; // Mirrored position
     vel = -vel; // Reverse normal velocity (no-slip)
     return true;
   }
@@ -110,7 +110,7 @@ bool calculateGhostPosVel(double &pos, double &vel, double boxMin, double boxMax
 }
 
 
-void generateGhostParticles(AutoPasContainer &sphSystem, double cutoff) {
+void generateGhostParticles(AutoPasContainer &sphSystem, double cutoff, double boundarySpacing, double boundaryPressure) {
   std::vector<Particle> ghosts;
   std::array<double, 3> boxMin = sphSystem.getBoxMin();
   std::array<double, 3> boxMax = sphSystem.getBoxMax();
@@ -124,7 +124,7 @@ void generateGhostParticles(AutoPasContainer &sphSystem, double cutoff) {
     for (size_t dim = 0; dim < 3; dim++) {
       pos = positions[0][dim];
       vel = velocities[0][dim];
-      if (calculateGhostPosVel(pos, vel, boxMin[dim], boxMax[dim], cutoff)){
+      if (calculateGhostPosVel(pos, vel, boxMin[dim], boxMax[dim], cutoff, boundarySpacing)){
         newPosition = positions[0];
         newVelocity = velocities[0];
         newPosition[dim] = pos;
@@ -134,7 +134,7 @@ void generateGhostParticles(AutoPasContainer &sphSystem, double cutoff) {
         for (size_t dim2 = dim + 1; dim2 < 3; dim2++) {
           pos = positions[0][dim2];
           vel = velocities[0][dim2];
-          if (calculateGhostPosVel(pos, vel, boxMin[dim2], boxMax[dim2], cutoff)){
+          if (calculateGhostPosVel(pos, vel, boxMin[dim2], boxMax[dim2], cutoff, boundarySpacing)){
             newPosition[dim2] = pos;
             newVelocity[dim2] = vel;
             positions.push_back(newPosition);
@@ -142,7 +142,7 @@ void generateGhostParticles(AutoPasContainer &sphSystem, double cutoff) {
             for (size_t dim3 = dim2 + 1; dim3 < 3; dim3++) {
               pos = positions[0][dim3];
               vel = velocities[0][dim3];
-              if (calculateGhostPosVel(pos, vel, boxMin[dim3], boxMax[dim3], cutoff)){
+              if (calculateGhostPosVel(pos, vel, boxMin[dim3], boxMax[dim3], cutoff, boundarySpacing)){
                 newPosition[dim3] = pos;
                 newVelocity[dim3] = vel;
                 positions.push_back(newPosition);
@@ -159,6 +159,7 @@ void generateGhostParticles(AutoPasContainer &sphSystem, double cutoff) {
         Particle ghost = *part;
         ghost.setR(positions[i]);
         ghost.setV(velocities[i]);
+        ghost.setPressure(part->getPressure() * boundaryPressure);
         ghost.setIsGhost(true);
         ghosts.push_back(ghost);
     }
@@ -211,9 +212,9 @@ int main(int argc, char* argv[]) {
   std::array<double, 3> boxMin(config.getBoxMin()), boxMax(config.getBoxMax());
   double dt, t_end;
   int write_freq;
-  double cutoff, lj_cutoff, lj_epsilon, lj_sigma, density, alpha, beta;
+  double cutoff, lj_cutoff, lj_epsilon, lj_sigma, density, alpha, beta, boundarySpacing, boundaryPressure;
   config.SetupContainer(sphSystem, &dt, &t_end, &write_freq, &cutoff, &lj_cutoff,
-                        &lj_epsilon, &lj_sigma, &density, &alpha, &beta);
+                        &lj_epsilon, &lj_sigma, &density, &alpha, &beta, &boundarySpacing, &boundaryPressure);
 
   std::set<autopas::ContainerOption> allowedContainers{autopas::ContainerOption::linkedCells,
                                                        autopas::ContainerOption::verletLists,
@@ -254,8 +255,8 @@ int main(int argc, char* argv[]) {
       force_step += 1;
     }
     config.generateBoundaryParticles(sphSystem);
-    generateGhostParticles(sphSystem, cutoff);
     updatePressure(sphSystem, density);
+    generateGhostParticles(sphSystem, cutoff, boundarySpacing, boundaryPressure);
     calculateDensityDot(sphSystem);
     calculateHydroForce(sphSystem, hydroForceFunctor);
     addExternalForce(sphSystem, externalForce);

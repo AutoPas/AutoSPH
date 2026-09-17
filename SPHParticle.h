@@ -124,6 +124,8 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
 
   void setDensityDot(double density_dot) { _density_dot = density_dot; }
 
+  void setPressure(double pressure) { _pressure = pressure; }
+
   void setEnergy(double energy) { _energy = energy; }
 
   void setVel_half(const std::array<double, 3> &vel_half) { SPHParticle::_vel_half = vel_half; }

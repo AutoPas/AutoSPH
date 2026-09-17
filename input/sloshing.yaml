@@ -30,11 +30,13 @@ forces:
 particles:
   density: 1000.0
 
-  particle_box_min: [0.0, 0.0, 0.0]
-  particle_box_max: [0.25, 0.125, 0.25]
+  particle_box_min: [0.0, 0.125, 0.0]
+  particle_box_max: [0.25, 0.25, 0.25]
   particle_num: [16, 8, 16]
 
   smoothing_length: 0.012
+  boundary_spacing: 0.01 # multiplies smoothing_length, for boundary and ghost particles
+  boundary_pressure: 5.0 # factor to multiply ghost particle pressure
   sound_speed: 20.0
 
   alpha: 1.0  # artificial viscosity coefficient
