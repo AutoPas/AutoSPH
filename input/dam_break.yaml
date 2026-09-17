@@ -26,7 +26,7 @@ particles:
   particle_num: [6, 12, 24]
 
   smoothing_length: 0.012
-  boundary_spacing: 0.01 # multiplies smoothing_length, for boundary and ghost particles
+  boundary_spacing: 0.5 # multiplies smoothing_length, for boundary and ghost particles
   boundary_pressure: 5.0 # factor to multiply ghost particle pressure
   sound_speed: 20.0
 
