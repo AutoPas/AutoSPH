@@ -59,9 +59,12 @@ class HydroForceFunctor : public autopas::PairwiseFunctor<Particle_T, HydroForce
 
     double dvdr = autopas::utils::ArrayMath::dot(dv, dr);
 
+    const double rho_i = i.getDensity();
+    const double rho_j = j.getDensity();
+
     const double h_ij = 0.5 * (i.getSmoothingLength() + j.getSmoothingLength());
     const double c_ij = 0.5 * (i.getSoundSpeed() + j.getSoundSpeed());
-    const double rho_ij = 0.5 * (i.getDensity() + j.getDensity());
+    const double rho_ij = 0.5 * (rho_i + rho_j);
     const double varphi = 0.1 * h_ij;
     const double phi_ij = h_ij * dvdr / (autopas::utils::ArrayMath::dot(dr, dr) + varphi);
 
@@ -73,7 +76,7 @@ class HydroForceFunctor : public autopas::PairwiseFunctor<Particle_T, HydroForce
     // ep_j[j].smth));
 
     double scale =
-        i.getPressure() / (i.getDensity() * i.getDensity()) + j.getPressure() / (j.getDensity() * j.getDensity()) + AV;
+        i.getPressure() / (rho_i * rho_i) + j.getPressure() / (rho_j * rho_j) + AV;
     i.subAcceleration(gradW_ij * (scale * j.getMass()));
     // hydro[i].acc     -= ep_j[j].mass * (ep_i[i].pres / (ep_i[i].dens *
     // ep_i[i].dens) + ep_j[j].pres / (ep_j[j].dens * ep_j[j].dens) + AV) *
@@ -94,14 +97,12 @@ class HydroForceFunctor : public autopas::PairwiseFunctor<Particle_T, HydroForce
       i.addAcceleration(f);
     }
 
-    double scale2i = j.getMass() * (i.getPressure() / (i.getDensity() * i.getDensity()) + 0.5 * AV);
-    i.addEngDot(autopas::utils::ArrayMath::dot(gradW_ij, dv) * scale2i);
+    i.addEngDot(autopas::utils::ArrayMath::dot(gradW_ij, dv) * (scale * j.getMass()));
     // hydro[i].eng_dot += ep_j[j].mass * (ep_i[i].pres / (ep_i[i].dens *
     // ep_i[i].dens) + 0.5 * AV) * dv * gradW_ij;
 
     if (newton3) {
-      double scale2j = i.getMass() * (j.getPressure() / (j.getDensity() * j.getDensity()) + 0.5 * AV);
-      j.addEngDot(autopas::utils::ArrayMath::dot(gradW_ij, dv) * scale2j);
+      j.addEngDot(autopas::utils::ArrayMath::dot(gradW_ij, dv) * (scale * -1 * i.getMass()));
       // Newton 3
     }
   }

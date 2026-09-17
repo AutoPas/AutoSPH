@@ -148,6 +148,8 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
     _acc -= acc;
   }
 
+  void addEnergy(double energy) { _energy += energy; }
+
   void addEngDot(double eng_dot) { _energy_dot += eng_dot; }
 
   void checkAndSetVSigMax(double v_sig) { _v_sig_max = std::max(v_sig, _v_sig_max); }

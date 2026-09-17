@@ -39,6 +39,7 @@ void velocityVerletFirstStep(AutoPasContainer &sphSystem, const double dt) {
     part->addV(part->getAcceleration() * dt * 0.5);
     part->addR(part->getV() * dt);
     part->addDensity(part->getDensityDot() * dt);
+    part->addEnergy(part->getEngDot() * dt);
   }
 }
 
@@ -243,6 +244,8 @@ int main(int argc, char* argv[]) {
   size_t step = 0;
   size_t force_step = 0;
   const size_t maxIterations = static_cast<size_t>(t_end/dt);
+
+  AutoPasLog(INFO, "Simulation started");
 
   for (double time = 0.; time < t_end; time += dt, ++step) {
     velocityVerletFirstStep(sphSystem, dt);
