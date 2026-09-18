@@ -18,7 +18,8 @@ using ParticleType = SPHParticle;
 
 class SimpleVtkWriter {
 public:
-    SimpleVtkWriter(std::string sessionName, std::string outputFolder, int maxDigits, const std::string &configPath = "")
+    SimpleVtkWriter(std::string sessionName, std::string outputFolder, int maxDigits, size_t num_probes,
+                    const std::string &configPath = "")
         : _sessionName(std::move(sessionName)), 
           _outputFolder(std::move(outputFolder)), 
           _maxDigits(maxDigits) {
@@ -32,7 +33,7 @@ public:
 
 
         _csvPath = _sessionFolderPath + _sessionName + "_probes.csv";
-        initializeProbeFile();
+        initializeProbeFile(num_probes);
 
         if (!configPath.empty() && fs::exists(configPath)) {
             std::string destConfigPath = _sessionFolderPath + _sessionName + ".yaml";
@@ -63,6 +64,8 @@ public:
 
         size_t id = 1;
 
+        csv << iteration << "," << simTime ;
+
         for (const auto& probe : probes) {
             double probeDensity = 0.0;
             double probePressure = 0.0;
@@ -71,12 +74,13 @@ public:
 
             probeMeasurement(container, probe, cutoff, smoothingLength, probeVel, probeForce, probeDensity, probePressure);
 
-            csv << iteration << "," << simTime << "," << id++ << ","
-                << probe[0] << "," << probe[1] << "," << probe[2] << ","
+            csv << "," << probe[0] << "," << probe[1] << "," << probe[2] << ","
                 << probeVel[0] << "," << probeVel[1] << "," << probeVel[2] << ","
                 << probeForce[0] << "," << probeForce[1] << "," << probeForce[2] << ","
-                << probeDensity << "," << probePressure << "\n" ;
+                << probeDensity << "," << probePressure ;
         }
+
+        csv << "\n" ;
     }
 
 private:
@@ -92,10 +96,15 @@ private:
         mkdir(path.c_str(), 0777); 
     }
 
-    void initializeProbeFile() {
+    void initializeProbeFile(size_t num_probes) {
         std::ofstream csv(_csvPath, std::ios::out);
         if (csv.is_open()) {
-            csv << "iteration,time,probe_id,x,y,z,v_x,v_y,v_z,f_x,f_y,f_z,density,pressure\n";
+            csv << "iteration,time" ;
+            for (size_t id = 0; id < num_probes; ++id) {
+                csv << ",x_" << id << ",y_" << id << ",z_" << id << ",v_x_" << id << ",v_y_" << id << ",v_z_" << id 
+                    << ",f_x_" << id << ",f_y_" << id << ",f_z_" << id << ",density_" << id << ",pressure_" << id ;
+            }
+            csv << "\n" ;
         } else {
             AutoPasLog(WARN, "Failed to initialize probe CSV file: {}", _csvPath);
         }
