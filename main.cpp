@@ -213,8 +213,8 @@ int main(int argc, char* argv[]) {
   std::array<double, 3> boxMin(config.getBoxMin()), boxMax(config.getBoxMax());
   double dt, t_end;
   int write_freq;
-  double cutoff, lj_cutoff, lj_epsilon, lj_sigma, density, alpha, beta, boundarySpacing, boundaryPressure;
-  config.SetupContainer(sphSystem, &dt, &t_end, &write_freq, &cutoff, &lj_cutoff,
+  double cutoff, smoothingLength, lj_cutoff, lj_epsilon, lj_sigma, density, alpha, beta, boundarySpacing, boundaryPressure;
+  config.SetupContainer(sphSystem, &dt, &t_end, &write_freq, &cutoff, &smoothingLength, &lj_cutoff,
                         &lj_epsilon, &lj_sigma, &density, &alpha, &beta, &boundarySpacing, &boundaryPressure);
 
   std::set<autopas::ContainerOption> allowedContainers{autopas::ContainerOption::linkedCells,
@@ -230,6 +230,7 @@ int main(int argc, char* argv[]) {
   std::array<double, 3> gravity = config.getGravity();
   std::vector<double> forceTimestamps = config.getForceTimestamps();
   std::vector<std::array<double, 3>> customForces = config.getCustomForces();
+  std::vector<std::array<double, 3>> probes = config.getProbes();
 
   std::array<double, 3> externalForce = gravity;
 
@@ -271,6 +272,7 @@ int main(int argc, char* argv[]) {
       // AutoPasLog(INFO, "Number of halo particles: {}", sphSystem.getNumberOfParticles(autopas::IteratorBehavior::halo));
       terminalOutput.printProgress(step, maxIterations);
       vtkWriter.recordTimestep(step, sphSystem, boxMin, boxMax, autopas::IteratorBehavior::owned);
+      vtkWriter.recordProbes(step, time, cutoff, smoothingLength, sphSystem, probes);
     }
   }
 

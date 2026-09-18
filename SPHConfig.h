@@ -29,6 +29,7 @@ class SPHConfig {
     std::array<double, 3> gravity{};
     std::vector<double> forceTimestamps;
     std::vector<std::array<double, 3>> customForces;
+    std::vector<std::array<double, 3>> probePositions;
 
     double density;
     std::array<double, 3> particleBoxMin{};
@@ -82,6 +83,10 @@ class SPHConfig {
             forceTimestamps.push_back(totalTime + timeStep);
             customForces.push_back({0.0, 0.0, 0.0});
 
+            if (config["probes"]) {
+                probePositions = config["probes"].as<std::vector<std::array<double, 3>>>();
+            }
+
             density = config["particles"]["density"].as<double>();
 
             particleBoxMin = config["particles"]["particle_box_min"].as<std::array<double, 3>>();
@@ -114,9 +119,10 @@ class SPHConfig {
     std::array<double, 3> getGravity() { return gravity; }
     std::vector<double> getForceTimestamps() { return forceTimestamps; }
     std::vector<std::array<double, 3>> getCustomForces() { return customForces; }
+    std::vector<std::array<double, 3>> getProbes() { return probePositions; }
 
     void SetupContainer(AutoPasContainer &sphSystem, double *dt, double *t_end, int *write_freq,
-                        double *_cutoff, double *_lj_cutoff, double *_lj_epsilon, double *_lj_sigma,
+                        double *_cutoff, double *_smoothingLength, double *_lj_cutoff, double *_lj_epsilon, double *_lj_sigma,
                         double *_density, double *_alpha, double *_beta, double *_boundarySpacing, double *_boundaryPressure) {
         sphSystem.setBoxMin(boxMin);
         sphSystem.setBoxMax(boxMax);
@@ -130,6 +136,7 @@ class SPHConfig {
         *t_end = totalTime + timeStep * 0.5;
         *write_freq = static_cast<int>(std::round(writeFrequency / timeStep));
         *_cutoff = cutoff;
+        *_smoothingLength = smoothingLength;
         *_lj_cutoff = lj_cutoff;
         *_lj_epsilon = lj_epsilon;
         *_lj_sigma = lj_sigma;

@@ -30,6 +30,10 @@ public:
         tryCreateFolder(_sessionName, _outputFolder);
         tryCreateFolder("data", _sessionFolderPath);
 
+
+        _csvPath = _sessionFolderPath + _sessionName + "_probes.csv";
+        initializeProbeFile();
+
         if (!configPath.empty() && fs::exists(configPath)) {
             std::string destConfigPath = _sessionFolderPath + _sessionName + ".yaml";
             try {
@@ -40,7 +44,6 @@ public:
         }
     }
 
-    // Pass boxMin and boxMax directly instead of using a decomposition object
     void recordTimestep(size_t currentIteration, 
                         const autopas::AutoPas<ParticleType> &autoPasContainer,
                         const std::array<double, 3>& boxMin,
@@ -51,17 +54,53 @@ public:
         recordDomainSubdivision(currentIteration, boxMin, boxMax);
     }
 
+    void recordProbes(size_t iteration, double simTime, double cutoff, double smoothingLength,
+                      const autopas::AutoPas<ParticleType> &container,
+                      const std::vector<std::array<double, 3>> &probes) {
+
+        std::ofstream csv(_csvPath, std::ios::app);
+        if (!csv.is_open()) return;
+
+        size_t id = 1;
+
+        for (const auto& probe : probes) {
+            double probeDensity = 0.0;
+            double probePressure = 0.0;
+            std::array<double, 3> probeVel = {0.0, 0.0, 0.0};
+            std::array<double, 3> probeForce = {0.0, 0.0, 0.0};
+
+            probeMeasurement(container, probe, cutoff, smoothingLength, probeVel, probeForce, probeDensity, probePressure);
+
+            csv << iteration << "," << simTime << "," << id++ << ","
+                << probe[0] << "," << probe[1] << "," << probe[2] << ","
+                << probeVel[0] << "," << probeVel[1] << "," << probeVel[2] << ","
+                << probeForce[0] << "," << probeForce[1] << "," << probeForce[2] << ","
+                << probeDensity << "," << probePressure << "\n" ;
+        }
+    }
+
 private:
     std::string _sessionName;
     std::string _outputFolder;
     std::string _sessionFolderPath;
     std::string _dataFolderPath;
+    std::string _csvPath;
     int _maxDigits;
 
     static void tryCreateFolder(const std::string &name, const std::string &location) {
         std::string path = location + "/" + name;
         mkdir(path.c_str(), 0777); 
     }
+
+    void initializeProbeFile() {
+        std::ofstream csv(_csvPath, std::ios::out);
+        if (csv.is_open()) {
+            csv << "iteration,time,probe_id,x,y,z,v_x,v_y,v_z,f_x,f_y,f_z,density,pressure\n";
+        } else {
+            AutoPasLog(WARN, "Failed to initialize probe CSV file: {}", _csvPath);
+        }
+    }
+
 
     void generateFilename(const std::string &tag, size_t iteration, std::ostringstream &stream) const {
         stream << _dataFolderPath << _sessionName << "_" << tag << "_0_" 
@@ -204,5 +243,25 @@ private:
              << "        <DataArray type=\"Int32\" Name=\"offsets\" format=\"ascii\">\n          8\n        </DataArray>\n"
              << "        <DataArray type=\"UInt8\" Name=\"types\" format=\"ascii\">\n          11\n        </DataArray>\n"
              << "      </Cells>\n    </Piece>\n  </UnstructuredGrid>\n</VTKFile>\n";
+    }
+
+    void probeMeasurement(const autopas::AutoPas<ParticleType> &container, std::array<double, 3> pos,
+                          const double cutoff, const double smoothingLength, std::array<double, 3> &vel,
+                          std::array<double, 3> &force, double &density, double &pressure) {
+        using namespace autopas::utils::ArrayMath::literals;
+
+        const std::array<double, 3> lowCorner = pos - cutoff;
+        const std::array<double, 3> highCorner = pos + cutoff;
+        for(auto part = container.getRegionIterator(lowCorner, highCorner); part.isValid(); ++part) {
+            const std::array<double, 3> dr = pos - part->getR();
+            const double W = SPHKernels::W(dr, smoothingLength);
+            if (W > 0) {
+                const double scale = W * part->getMass() / part->getDensity();
+                vel += part->getV() * scale;
+                force += part->getAcceleration() * scale;
+                density += scale * part->getDensity();
+                pressure += scale * part->getPressure();
+            }
+        }
     }
 };
