@@ -68,7 +68,6 @@ class SPHConfig {
             totalTime = config["simulation"]["total_time"].as<double>();
             writeFrequency = config["simulation"]["write_frequency"].as<double>();
 
-            cutoff = config["simulation"]["cutoff"].as<double>();
             skinToCutoffRatio = config["simulation"]["skin_cutoff_ratio"].as<double>();
             rebuildFrequency = config["simulation"]["rebuild_frequency"].as<unsigned int>();
             numSamples = config["simulation"]["num_samples"].as<unsigned int>();
@@ -94,6 +93,8 @@ class SPHConfig {
             particleNum = config["particles"]["particle_num"].as<std::array<unsigned int, 3>>();
 
             smoothingLength = config["particles"]["smoothing_length"].as<double>();
+            cutoff = SPHKernels::getKernelSupportRadius() * smoothingLength;
+
             boundarySpacing = config["particles"]["boundary_spacing"].as<double>() * smoothingLength;
             boundaryPressure = config["particles"]["boundary_pressure"].as<double>();
             soundSpeed = config["particles"]["sound_speed"].as<double>();
