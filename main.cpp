@@ -244,6 +244,7 @@ int main(int argc, char* argv[]) {
 
   size_t step = 0;
   size_t force_step = 0;
+  size_t fileStep = 0;
   const size_t maxIterations = static_cast<size_t>(t_end/dt);
 
   AutoPasLog(INFO, "Simulation started");
@@ -272,7 +273,8 @@ int main(int argc, char* argv[]) {
       // AutoPasLog(INFO, "Number of halo particles: {}", sphSystem.getNumberOfParticles(autopas::IteratorBehavior::halo));
       terminalOutput.printProgress(step, maxIterations);
       vtkWriter.recordTimestep(step, sphSystem, boxMin, boxMax, autopas::IteratorBehavior::owned);
-      vtkWriter.recordProbes(step, time, cutoff, smoothingLength, sphSystem, probes);
+      vtkWriter.recordProbes(step, time, fileStep, cutoff, smoothingLength, sphSystem, probes);
+      ++fileStep;
     }
   }
 

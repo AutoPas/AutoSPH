@@ -55,7 +55,7 @@ public:
         recordDomainSubdivision(currentIteration, boxMin, boxMax);
     }
 
-    void recordProbes(size_t iteration, double simTime, double cutoff, double smoothingLength,
+    void recordProbes(size_t iteration, double simTime, size_t fileStep, double cutoff, double smoothingLength,
                       const autopas::AutoPas<ParticleType> &container,
                       const std::vector<std::array<double, 3>> &probes) {
 
@@ -64,7 +64,7 @@ public:
 
         size_t id = 1;
 
-        csv << iteration << "," << simTime ;
+        csv << iteration << "," << simTime << "," << fileStep;
 
         for (const auto& probe : probes) {
             double probeDensity = 0.0;
@@ -99,7 +99,7 @@ private:
     void initializeProbeFile(size_t num_probes) {
         std::ofstream csv(_csvPath, std::ios::out);
         if (csv.is_open()) {
-            csv << "iteration,time" ;
+            csv << "iteration,time,file_step" ;
             for (size_t id = 0; id < num_probes; ++id) {
                 csv << ",x_" << id << ",y_" << id << ",z_" << id << ",v_x_" << id << ",v_y_" << id << ",v_z_" << id 
                     << ",f_x_" << id << ",f_y_" << id << ",f_z_" << id << ",density_" << id << ",pressure_" << id ;
