@@ -213,9 +213,9 @@ int main(int argc, char* argv[]) {
   std::array<double, 3> boxMin(config.getBoxMin()), boxMax(config.getBoxMax());
   double dt, t_end;
   int write_freq;
-  double cutoff, smoothingLength, lj_cutoff, lj_epsilon, lj_sigma, density, alpha, beta, boundarySpacing, boundaryPressure;
-  config.SetupContainer(sphSystem, &dt, &t_end, &write_freq, &cutoff, &smoothingLength, &lj_cutoff,
-                        &lj_epsilon, &lj_sigma, &density, &alpha, &beta, &boundarySpacing, &boundaryPressure);
+  double cutoff, smoothingLength, density, alpha, beta, boundarySpacing, boundaryPressure;
+  config.SetupContainer(sphSystem, &dt, &t_end, &write_freq, &cutoff, &smoothingLength,
+                        &density, &alpha, &beta, &boundarySpacing, &boundaryPressure);
 
   std::set<autopas::ContainerOption> allowedContainers{autopas::ContainerOption::linkedCells,
                                                        autopas::ContainerOption::verletLists,
@@ -240,7 +240,7 @@ int main(int argc, char* argv[]) {
   SimpleVtkWriter vtkWriter(config.getSessionName(), config.getOutputFolder(), config.getMaxDigits(), probes.size(), configFilePath);
   TerminalOutput terminalOutput;
 
-  HydroForceFunctor<Particle> hydroForceFunctor(cutoff, lj_cutoff, lj_epsilon, lj_sigma, alpha, beta);
+  HydroForceFunctor<Particle> hydroForceFunctor(cutoff, alpha, beta);
 
   size_t step = 0;
   size_t force_step = 0;

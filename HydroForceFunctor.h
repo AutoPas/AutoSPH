@@ -4,21 +4,15 @@ template <class Particle_T>
 class HydroForceFunctor : public autopas::PairwiseFunctor<Particle_T, HydroForceFunctor<Particle_T>> {
  private:
   const double _cutoff;
-  const double _lj_cutoff;
-  const double _lj_epsilon;
-  const double _lj_sigma;
   const double _alpha;
   const double _beta;
 
  public:
 
-  HydroForceFunctor(double cutoff, double lj_cutoff, double lj_epsilon, double lj_sigma, double alpha, double beta)
+  HydroForceFunctor(double cutoff, double alpha, double beta)
       // the actual cutoff used is dynamic. 0 is used to pass the sanity check.
       : autopas::PairwiseFunctor<Particle_T, HydroForceFunctor<Particle_T>>(cutoff),
         _cutoff{cutoff},
-        _lj_cutoff{lj_cutoff},
-        _lj_epsilon{lj_epsilon},
-        _lj_sigma{lj_sigma},
         _alpha{alpha},
         _beta{beta} {};
 
@@ -84,17 +78,6 @@ class HydroForceFunctor : public autopas::PairwiseFunctor<Particle_T, HydroForce
     if (newton3) {
       j.addAcceleration(gradW_ij * (scale * i.getMass()));
       // Newton3, gradW_ij = -gradW_ji
-    }
-
-    if (distance < _lj_cutoff && j.isBoundary()) {
-      double inv_dist = 1 / distance;
-      double lj6 = _lj_sigma * inv_dist;
-      lj6 *= lj6 * lj6;
-      lj6 *= lj6;
-      double lj12 = lj6 * lj6;
-      double fac = -24 * _lj_epsilon * (lj12 - lj6) * inv_dist * inv_dist;
-      std::array<double, 3> f = dr * fac;
-      i.addAcceleration(f);
     }
 
     i.addEngDot(autopas::utils::ArrayMath::dot(gradW_ij, dv) * (scale * j.getMass()));
