@@ -52,6 +52,7 @@ public:
 
     return terminalWidth;
   }
+
   void printProgress(size_t iterationProgress, size_t maxIterations) {
     if (not showProgressBar) { return; }
 
@@ -92,6 +93,10 @@ public:
     // clear current line (=delete previous progress bar)
     std::cout << std::string(terminalWidth, '\r');
     // print everything
-    std::cout << progressbar.str() << info.str() << std::flush;
+    if (iterationProgress >= maxIterations) {
+      std::cout << progressbar.str() << info.str() << std::endl;
+    } else {
+      std::cout << progressbar.str() << info.str() << std::flush;
+    }
   }
 };
