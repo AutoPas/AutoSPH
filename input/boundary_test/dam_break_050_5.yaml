@@ -1,0 +1,38 @@
+output:
+  output_folder: "../output"
+  session_name: "dam_break_050_5"
+
+simulation:
+  box_min: [0.0, 0.0, 0.0]
+  box_max: [0.25, 0.25, 0.25]
+
+  time_step: 0.0001
+  total_time: 1
+  write_frequency: 0.005
+
+  skin_cutoff_ratio: 0.15
+  rebuild_frequency: 6  # has to be multiple of two, as there are two functor calls per iteration.
+  num_samples: 6  # has to be multiple of 2, should also be multiple of rebuild_frequency (but this is not necessary)
+
+forces:
+  gravity: [0.0, -10.0, 0.0]
+
+particles:
+  density: 1000.0
+
+  particle_box_min: [0.0, 0.0, 0.0]
+  particle_box_max: [0.0625, 0.125, 0.25]
+  particle_num: [8, 16, 32]
+
+  smoothing_length: 0.012
+  boundary_spacing: 0.50 # multiplies smoothing_length, displaces boundary and ghost particles
+  boundary_pressure: 5.0 # factor to multiply ghost particle pressure
+  sound_speed: 20.0
+
+  alpha: 1.0  # artificial viscosity coefficient
+  beta: 1.0  # artificial viscosity coefficient
+
+probes:
+  - [0.0, 0.125, 0.0]
+  - [0.125, 0.125, 0.0]
+  - [0.25, 0.125, 0.0]
