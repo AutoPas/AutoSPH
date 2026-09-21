@@ -1,5 +1,5 @@
 output:
-  output_folder: "../output"
+  output_folder: "../output/boundary_test"
   session_name: "dam_break_050_2"
 
 simulation:

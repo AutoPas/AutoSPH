@@ -1,6 +1,6 @@
 output:
-  output_folder: "../output"
-25session_name: "dam_break_025_2"
+  output_folder: "../output/boundary_test"
+  session_name: "dam_break_025_2"
 
 simulation:
   box_min: [0.0, 0.0, 0.0]
