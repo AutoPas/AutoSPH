@@ -218,9 +218,15 @@ int main(int argc, char* argv[]) {
   config.SetupContainer(sphSystem, &dt, &t_end, &write_freq, &write_files, &cutoff, &smoothingLength,
                         &density, &alpha, &beta, &boundarySpacing, &boundaryPressure);
 
-  std::set<autopas::ContainerOption> allowedContainers{autopas::ContainerOption::linkedCells,
+  std::set<autopas::ContainerOption> allowedContainers{autopas::ContainerOption::directSum,
+                                                       autopas::ContainerOption::linkedCells,
+                                                       autopas::ContainerOption::linkedCellsReferences,
                                                        autopas::ContainerOption::verletLists,
-                                                       autopas::ContainerOption::verletListsCells};
+                                                       autopas::ContainerOption::verletListsCells,
+                                                       autopas::ContainerOption::verletClusterLists,
+                                                       autopas::ContainerOption::varVerletListsAsBuild,
+                                                       autopas::ContainerOption::pairwiseVerletLists,
+                                                       autopas::ContainerOption::octree};
   sphSystem.setAllowedContainers(allowedContainers);
 
   std::set<autopas::DataLayoutOption> allowedDataLayouts{autopas::DataLayoutOption::aos};
