@@ -213,8 +213,9 @@ int main(int argc, char* argv[]) {
   std::array<double, 3> boxMin(config.getBoxMin()), boxMax(config.getBoxMax());
   double dt, t_end;
   int write_freq;
+  bool write_files;
   double cutoff, smoothingLength, density, alpha, beta, boundarySpacing, boundaryPressure;
-  config.SetupContainer(sphSystem, &dt, &t_end, &write_freq, &cutoff, &smoothingLength,
+  config.SetupContainer(sphSystem, &dt, &t_end, &write_freq, &write_files, &cutoff, &smoothingLength,
                         &density, &alpha, &beta, &boundarySpacing, &boundaryPressure);
 
   std::set<autopas::ContainerOption> allowedContainers{autopas::ContainerOption::linkedCells,
@@ -272,9 +273,11 @@ int main(int argc, char* argv[]) {
       // AutoPasLog(INFO, "Iteration {} completed", step);
       // AutoPasLog(INFO, "Number of halo particles: {}", sphSystem.getNumberOfParticles(autopas::IteratorBehavior::halo));
       terminalOutput.printProgress(step, maxIterations);
-      vtkWriter.recordTimestep(step, sphSystem, boxMin, boxMax, autopas::IteratorBehavior::owned);
-      vtkWriter.recordProbes(step, time, fileStep, cutoff, smoothingLength, sphSystem, probes);
-      ++fileStep;
+      if (write_files){
+        vtkWriter.recordTimestep(step, sphSystem, boxMin, boxMax, autopas::IteratorBehavior::owned);
+        vtkWriter.recordProbes(step, time, fileStep, cutoff, smoothingLength, sphSystem, probes);
+        ++fileStep;
+      }
     }
   }
 

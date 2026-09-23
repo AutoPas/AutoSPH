@@ -15,6 +15,7 @@ class SPHConfig {
     std::string outputFolder;
     std::string sessionName;
     unsigned int maxDigits;
+    bool writeFiles;
 
     std::array<double, 3> boxMin{};
     std::array<double, 3> boxMax{};
@@ -56,6 +57,7 @@ class SPHConfig {
 
             outputFolder = config["output"]["output_folder"].as<std::string>();
             sessionName = config["output"]["session_name"].as<std::string>();
+            writeFiles = config["output"]["write_files"].as<bool>(true);
 
             boxMin = config["simulation"]["box_min"].as<std::array<double, 3>>();
             boxMax = config["simulation"]["box_max"].as<std::array<double, 3>>();
@@ -114,7 +116,7 @@ class SPHConfig {
     std::vector<std::array<double, 3>> getCustomForces() { return customForces; }
     std::vector<std::array<double, 3>> getProbes() { return probePositions; }
 
-    void SetupContainer(AutoPasContainer &sphSystem, double *dt, double *t_end, int *write_freq,
+    void SetupContainer(AutoPasContainer &sphSystem, double *dt, double *t_end, int *write_freq, bool *write_files,
                         double *_cutoff, double *_smoothingLength, double *_density, double *_alpha, 
                         double *_beta, double *_boundarySpacing, double *_boundaryPressure) {
         sphSystem.setBoxMin(boxMin);
@@ -128,6 +130,7 @@ class SPHConfig {
         *dt = timeStep;
         *t_end = totalTime + timeStep * 0.5;
         *write_freq = static_cast<int>(std::round(writeFrequency / timeStep));
+        *write_files = writeFiles;
         *_cutoff = cutoff;
         *_smoothingLength = smoothingLength;
         *_density = density;
