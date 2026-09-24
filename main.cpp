@@ -12,8 +12,6 @@
 
 #include "autopas/AutoPas.h"
 #include "SPHParticle.h"
-#include "DensityFunctor.h"
-#include "HydroForceFunctor.h"
 #include "DensityForceFunctor.h"
 #include "SimpleVtkWriter.h"
 #include "SPHConfig.h"
