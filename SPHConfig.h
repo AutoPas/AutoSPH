@@ -186,8 +186,12 @@ class SPHConfig {
         }
 
         AutoPasLog(INFO, "Setup completed");
-        AutoPasLog(INFO, "Number of particles (i): {}", i);
         AutoPasLog(INFO, "Number of particles: {}", sphSystem.getNumberOfParticles());
+        AutoPasLog(INFO, "Particle spacing: [{:.5f}, {:.5f}, {:.5f}] ", particleSpacing[0],
+                   particleSpacing[1], particleSpacing[2]);
+        AutoPasLog(INFO, "h / particle spacing: [{:.2f}, {:.2f}, {:.2f}] ", smoothingLength / particleSpacing[0],
+                   smoothingLength / particleSpacing[1], smoothingLength / particleSpacing[2]);
+        AutoPasLog(INFO, "Cutoff distance: {:.3f}", cutoff);
     }
 
     void generateBoundaryParticles(AutoPasContainer &sphSystem) {

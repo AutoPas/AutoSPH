@@ -22,12 +22,12 @@
 using Particle = SPHParticle;
 using AutoPasContainer = autopas::AutoPas<Particle>;
 
-void Initialize(AutoPasContainer &sphSystem, double density_0) {
-  AutoPasLog(INFO, "Initialization started");
+void InitializePressure(AutoPasContainer &sphSystem, double density_0) {
+  AutoPasLog(INFO, "Pressure initialization started");
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
     part->calcPressure(density_0);
   }
-  AutoPasLog(INFO, "Initialization completed");
+  AutoPasLog(INFO, "Pressure initialization completed");
 }
 
 void velocityVerletFirstStep(AutoPasContainer &sphSystem, const double dt) {
@@ -225,7 +225,7 @@ int main(int argc, char* argv[]) {
   std::array<double, 3> externalForce = gravity;
 
   config.SetupParticles(sphSystem);
-  Initialize(sphSystem, density);
+  InitializePressure(sphSystem, density);
 
   SimpleVtkWriter vtkWriter(config.getSessionName(), config.getOutputFolder(), config.getMaxDigits(), probes.size(), configFilePath);
   TerminalOutput terminalOutput;
