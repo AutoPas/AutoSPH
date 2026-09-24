@@ -14,6 +14,7 @@
 #include "SPHParticle.h"
 #include "DensityFunctor.h"
 #include "HydroForceFunctor.h"
+#include "DensityForceFunctor.h"
 #include "SimpleVtkWriter.h"
 #include "SPHConfig.h"
 #include "TerminalOutput.h"
@@ -52,19 +53,6 @@ void velocityVerletSecondStep(AutoPasContainer &sphSystem, const double dt) {
   }
 }
 
-void calculateDensityDot(AutoPasContainer &sphSystem) {
-  DensityFunctor<Particle> densityFunctor;
-
-  AUTOPAS_OPENMP(parallel)
-  for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
-    part->setDensityDot(0.);
-    densityFunctor.AoSFunctor(*part, *part);
-    part->setDensityDot(part->getDensityDot() / 2);
-  }
-
-  sphSystem.computeInteractions(&densityFunctor);
-}
-
 void updatePressure(AutoPasContainer &sphSystem, double density_0) {
   AUTOPAS_OPENMP(parallel)
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
@@ -72,19 +60,16 @@ void updatePressure(AutoPasContainer &sphSystem, double density_0) {
   }
 }
 
-void calculateHydroForce(AutoPasContainer &sphSystem, HydroForceFunctor<Particle> &hydroForceFunctor) {
+void calculateDensityForce(AutoPasContainer &sphSystem, DensityForceFunctor<Particle> &densityForceFunctor) {
 
   AUTOPAS_OPENMP(parallel)
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
-    // self interaction leeds to:
-    // 1) vsigmax = 2*part->getSoundSpeed()
-    // 2) no change in acceleration
-    part->setVSigMax(2 * part->getSoundSpeed());
+    part->setDensityDot(0.);
     part->setAcceleration(std::array<double, 3>{0., 0., 0.});
     part->setEngDot(0.);
   }
 
-  sphSystem.computeInteractions(&hydroForceFunctor);
+  sphSystem.computeInteractions(&densityForceFunctor);
 }
 
 void addExternalForce(AutoPasContainer &sphSystem, const std::array<double, 3> &externalForce) {
@@ -247,7 +232,7 @@ int main(int argc, char* argv[]) {
   SimpleVtkWriter vtkWriter(config.getSessionName(), config.getOutputFolder(), config.getMaxDigits(), probes.size(), configFilePath);
   TerminalOutput terminalOutput;
 
-  HydroForceFunctor<Particle> hydroForceFunctor(cutoff, alpha, beta);
+  DensityForceFunctor<Particle> densityForceFunctor(cutoff, alpha, beta);
 
   size_t step = 0;
   size_t force_step = 0;
@@ -269,8 +254,7 @@ int main(int argc, char* argv[]) {
     config.generateBoundaryParticles(sphSystem);
     updatePressure(sphSystem, density);
     generateGhostParticles(sphSystem, cutoff, boundarySpacing, boundaryPressure);
-    calculateDensityDot(sphSystem);
-    calculateHydroForce(sphSystem, hydroForceFunctor);
+    calculateDensityForce(sphSystem, densityForceFunctor);
     addExternalForce(sphSystem, externalForce);
 
     velocityVerletSecondStep(sphSystem, dt);
