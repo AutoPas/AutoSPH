@@ -144,6 +144,7 @@ class SPHConfig {
         unsigned int i = 0;
         double num_div;
         double particlesVolume = 1;
+        double containerVolume = 1;
         std::array<double, 3> particleSpacing;
 
         AutoPasLog(INFO, "Setup started");
@@ -168,6 +169,7 @@ class SPHConfig {
             if (particleBoxMax[dim] == boxMax[dim]) { particleBoxMax[dim] -= 1 * particleSpacing[dim]; }
 
             particlesVolume *= particleBoxMax[dim] - particleBoxMin[dim];
+            containerVolume *= boxMax[dim] - boxMin[dim];
 
             particleBoxMax[dim] += 0.5 * particleSpacing[dim]; // increasing particleBoxMax to ensure particle is added in case of rounding errors
         }
@@ -186,6 +188,11 @@ class SPHConfig {
         }
 
         AutoPasLog(INFO, "Setup completed");
+
+        AutoPasLog(INFO, "Particles Volume: {:.5f}", particlesVolume);
+        AutoPasLog(INFO, "Container Volume: {:.5f}", containerVolume);
+        AutoPasLog(INFO, "Fluid / Container Volume: {:.2f}", particlesVolume / containerVolume);
+
         AutoPasLog(INFO, "Number of particles: {}", sphSystem.getNumberOfParticles());
         AutoPasLog(INFO, "Particle spacing: [{:.5f}, {:.5f}, {:.5f}] ", particleSpacing[0],
                    particleSpacing[1], particleSpacing[2]);
