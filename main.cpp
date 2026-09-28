@@ -30,6 +30,18 @@ void InitializePressure(AutoPasContainer &sphSystem, double density_0) {
   AutoPasLog(INFO, "Pressure initialization completed");
 }
 
+void eulerStep(AutoPasContainer &sphSystem, const double dt) {
+  using namespace autopas::utils::ArrayMath::literals;
+
+  AUTOPAS_OPENMP(parallel)
+  for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
+    part->addV(part->getAcceleration() * dt);
+    part->addR(part->getV() * dt);
+    part->addDensity(part->getDensityDot() * dt);
+    part->addEnergy(part->getEngDot() * dt);
+  }
+}
+
 void velocityVerletFirstStep(AutoPasContainer &sphSystem, const double dt) {
   using namespace autopas::utils::ArrayMath::literals;
 
@@ -240,6 +252,7 @@ int main(int argc, char* argv[]) {
   AutoPasLog(INFO, "Simulation started");
 
   for (double time = 0.; time < t_end; time += dt, ++step) {
+    // eulerStep(sphSystem, dt);
     velocityVerletFirstStep(sphSystem, dt);
 
     auto invalidParticles = sphSystem.updateContainer();
