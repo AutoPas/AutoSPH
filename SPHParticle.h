@@ -24,8 +24,6 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
         _mass(0.),
         _smth(0.),
         _snds(0.),
-        // temporaries / helpers
-        _v_sig_max(0.),
         _acc{0., 0., 0.},
         _energy_dot(0.),
         _energy(0.),
@@ -51,8 +49,6 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
         _mass(mass),
         _smth(smth),
         _snds(snds),
-        // temporaries / helpers
-        _v_sig_max(0.),
         _acc{0., 0., 0.},
         _energy_dot(0.),
         _energy(0.),
@@ -82,7 +78,6 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
     velZ,
     soundSpeed,
     pressure,
-    vsigmax,
     accX,
     accY,
     accZ,
@@ -101,8 +96,6 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
   double getSoundSpeed() const { return _snds; }
 
   double getPressure() const { return _pressure; }
-
-  double getVSigMax() const { return _v_sig_max; }
 
   const std::array<double, 3> &getAcceleration() const { return _acc; }
 
@@ -130,8 +123,6 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
 
   void setVel_half(const std::array<double, 3> &vel_half) { SPHParticle::_vel_half = vel_half; }
 
-  void setVSigMax(double v_sig_max) { _v_sig_max = v_sig_max; }
-
   void setEngDot(double eng_dot) { _energy_dot = eng_dot; }
 
   void addDensity(double density) { _density += density; }
@@ -151,8 +142,6 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
   void addEnergy(double energy) { _energy += energy; }
 
   void addEngDot(double eng_dot) { _energy_dot += eng_dot; }
-
-  void checkAndSetVSigMax(double v_sig) { _v_sig_max = std::max(v_sig, _v_sig_max); }
 
   void calcPressure(double density_0) {
     if (_density <= 0.0) return;
@@ -175,7 +164,6 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
                                                 double,  // velZ
                                                 double,  // soundSpeed
                                                 double,  // pressure
-                                                double,  // vsigmax
                                                 double,  // accX
                                                 double,  // accY
                                                 double,  // accZ
@@ -223,8 +211,6 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
       return getSoundSpeed();
     } else if constexpr (attribute == AttributeNames::pressure) {
       return getPressure();
-    } else if constexpr (attribute == AttributeNames::vsigmax) {
-      return getVSigMax();
     } else if constexpr (attribute == AttributeNames::accX) {
       return getAcceleration()[0];
     } else if constexpr (attribute == AttributeNames::accY) {
@@ -271,8 +257,6 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
       setSoundSpeed(value);
     } else if constexpr (attribute == AttributeNames::pressure) {
       setPressure(value);
-    } else if constexpr (attribute == AttributeNames::vsigmax) {
-      setVSigMax(value);
     } else if constexpr (attribute == AttributeNames::accX) {
       _acc[0] = value;
     } else if constexpr (attribute == AttributeNames::accY) {
@@ -295,9 +279,6 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
   double _mass;          // mass
   double _smth;          // smoothing length
   double _snds;          // speed of sound
-
-  // temporaries / helpers
-  double _v_sig_max;
 
   // integrator
   std::array<double, 3> _acc;  // acceleration
