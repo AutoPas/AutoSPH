@@ -1,15 +1,15 @@
 #include <mpi.h>
+
 #include <array>
 #include <iostream>
 
+#include "DensityForceFunctor.h"
+#include "SPHConfig.h"
+#include "SPHParticle.h"
+#include "SimpleVtkWriter.h"
+#include "TerminalOutput.h"
 #include "autopas/AutoPas.h"
 #include "autopas/utils/ArrayMath.h"
-
-#include "SPHParticle.h"
-#include "DensityForceFunctor.h"
-#include "SimpleVtkWriter.h"
-#include "SPHConfig.h"
-#include "TerminalOutput.h"
 
 using Particle = SPHParticle;
 using AutoPasContainer = autopas::AutoPas<Particle>;
@@ -79,7 +79,8 @@ void addExternalForce(AutoPasContainer &sphSystem, const std::array<double, 3> &
   }
 }
 
-bool calculateGhostPosVel(double &pos, double &vel, double boxMin, double boxMax, double cutoff, double boundarySpacing) {
+bool calculateGhostPosVel(double &pos, double &vel, double boxMin, double boxMax, double cutoff,
+                          double boundarySpacing) {
   // If the particle is close enough to a boundary, it returns true and
   // calculates the position and velocity of the ghost particle in 1 dimension.
   double min_d = pos - boxMin;
@@ -97,13 +98,14 @@ bool calculateGhostPosVel(double &pos, double &vel, double boxMin, double boxMax
   return false;
 }
 
-bool addGhostPosVel(size_t dim, double cutoff, double boundarySpacing, std::array<double, 3> &boxMin, std::array<double, 3> &boxMax,
-                    std::vector<std::array<double, 3>> &positions, std::vector<std::array<double, 3>> &velocities, 
-                    std::array<double, 3> &newPos, std::array<double, 3> &newVel) {
+bool addGhostPosVel(size_t dim, double cutoff, double boundarySpacing, std::array<double, 3> &boxMin,
+                    std::array<double, 3> &boxMax, std::vector<std::array<double, 3>> &positions,
+                    std::vector<std::array<double, 3>> &velocities, std::array<double, 3> &newPos,
+                    std::array<double, 3> &newVel) {
   double pos = positions[0][dim];
   double vel = velocities[0][dim];
 
-  if (calculateGhostPosVel(pos, vel, boxMin[dim], boxMax[dim], cutoff, boundarySpacing)){
+  if (calculateGhostPosVel(pos, vel, boxMin[dim], boxMax[dim], cutoff, boundarySpacing)) {
     newPos[dim] = pos;
     newVel[dim] = vel;
     positions.push_back(newPos);
@@ -113,18 +115,19 @@ bool addGhostPosVel(size_t dim, double cutoff, double boundarySpacing, std::arra
   return false;
 }
 
-void generateGhostParticles(AutoPasContainer &sphSystem, double cutoff, double boundarySpacing, double boundaryPressure) {
+void generateGhostParticles(AutoPasContainer &sphSystem, double cutoff, double boundarySpacing,
+                            double boundaryPressure) {
   std::array<double, 3> boxMin = sphSystem.getBoxMin();
   std::array<double, 3> boxMax = sphSystem.getBoxMax();
   std::array<double, 3> newPos, newVel;
   std::vector<Particle> ghosts;
 
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
-    std::vector<std::array<double, 3>> positions = { part->getR() };
-    std::vector<std::array<double, 3>> velocities = { part->getV() };
+    std::vector<std::array<double, 3>> positions = {part->getR()};
+    std::vector<std::array<double, 3>> velocities = {part->getV()};
 
-    // Checks if the particle is close to a boundary in each dimension and creates 1 ghost if it is within cutoff distance
-    // of 1 wall; creates 3 ghosts in case it is close to 2 walls; and 7 ghosts if it is close to 3 walls.
+    // Checks if the particle is close to a boundary in each dimension and creates 1 ghost if it is within cutoff
+    // distance of 1 wall; creates 3 ghosts in case it is close to 2 walls; and 7 ghosts if it is close to 3 walls.
     for (size_t dim1 = 0; dim1 < 3; dim1++) {
       newPos = positions[0];
       newVel = velocities[0];
@@ -142,12 +145,12 @@ void generateGhostParticles(AutoPasContainer &sphSystem, double cutoff, double b
       }
     }
     for (size_t i = 1; i < positions.size(); ++i) {
-        Particle ghost = *part;
-        ghost.setR(positions[i]);
-        ghost.setV(velocities[i]);
-        ghost.setPressure(part->getPressure() * boundaryPressure);
-        ghost.setIsGhost(true);
-        ghosts.push_back(ghost);
+      Particle ghost = *part;
+      ghost.setR(positions[i]);
+      ghost.setV(velocities[i]);
+      ghost.setPressure(part->getPressure() * boundaryPressure);
+      ghost.setIsGhost(true);
+      ghosts.push_back(ghost);
     }
   }
   for (auto &g : ghosts) {
@@ -177,17 +180,17 @@ void addEnteringParticles(AutoPasContainer &sphSystem, std::vector<Particle> &in
   }
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   if (argc < 2) {
-      std::cerr << "Usage: " << argv[0] << " <path_to_config.yaml>\n";
-      return 1;
+    std::cerr << "Usage: " << argv[0] << " <path_to_config.yaml>\n";
+    return 1;
   }
 
   std::string configFilePath = argv[1];
 
   SPHConfig config;
   if (!config.loadFromFile(configFilePath)) {
-      return 1;
+    return 1;
   }
 
   AutoPasContainer sphSystem;
@@ -195,8 +198,8 @@ int main(int argc, char* argv[]) {
   int writeFreq;
   bool writeFiles;
   double cutoff, smoothingLength, density, alpha, beta, boundarySpacing, boundaryPressure;
-  config.SetupContainer(sphSystem, &dt, &t_end, &writeFreq, &writeFiles, &cutoff, &smoothingLength,
-                        &density, &alpha, &beta, &boundarySpacing, &boundaryPressure);
+  config.SetupContainer(sphSystem, &dt, &t_end, &writeFreq, &writeFiles, &cutoff, &smoothingLength, &density, &alpha,
+                        &beta, &boundarySpacing, &boundaryPressure);
 
   std::set<autopas::ContainerOption> allowedContainers{autopas::ContainerOption::directSum,
                                                        autopas::ContainerOption::linkedCells,
@@ -224,7 +227,8 @@ int main(int argc, char* argv[]) {
   config.SetupParticles(sphSystem);
   InitializePressure(sphSystem, density);
 
-  SimpleVtkWriter vtkWriter(config.getSessionName(), config.getOutputFolder(), config.getMaxDigits(), probes.size(), configFilePath);
+  SimpleVtkWriter vtkWriter(config.getSessionName(), config.getOutputFolder(), config.getMaxDigits(), probes.size(),
+                            configFilePath);
   TerminalOutput terminalOutput;
 
   DensityForceFunctor<Particle> densityForceFunctor(cutoff, alpha, beta);
@@ -232,7 +236,7 @@ int main(int argc, char* argv[]) {
   size_t step = 0;
   size_t force_step = 0;
   size_t fileStep = 0;
-  const size_t maxIterations = static_cast<size_t>(t_end/dt);
+  const size_t maxIterations = static_cast<size_t>(t_end / dt);
 
   AutoPasLog(INFO, "Simulation started");
 
@@ -257,7 +261,7 @@ int main(int argc, char* argv[]) {
 
     if (step % writeFreq == 0) {
       terminalOutput.printProgress(step, maxIterations);
-      if (writeFiles){
+      if (writeFiles) {
         vtkWriter.recordTimestep(step, sphSystem, boxMin, boxMax, autopas::IteratorBehavior::owned);
         vtkWriter.recordProbes(step, time, fileStep, cutoff, smoothingLength, sphSystem, probes);
         ++fileStep;
@@ -267,4 +271,3 @@ int main(int argc, char* argv[]) {
 
   AutoPasLog(INFO, "Simulation completed");
 }
-

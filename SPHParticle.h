@@ -273,12 +273,12 @@ class SPHParticle : public autopas::ParticleBaseFP64 {
   }
 
  private:
-  double _density;       // density
-  double _density_dot;   // time derivative of the density
-  double _pressure;      // pressure
-  double _mass;          // mass
-  double _smth;          // smoothing length
-  double _snds;          // speed of sound
+  double _density;      // density
+  double _density_dot;  // time derivative of the density
+  double _pressure;     // pressure
+  double _mass;         // mass
+  double _smth;         // smoothing length
+  double _snds;         // speed of sound
 
   // integrator
   std::array<double, 3> _acc;  // acceleration

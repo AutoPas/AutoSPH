@@ -11,7 +11,6 @@ class DensityForceFunctor : public autopas::PairwiseFunctor<Particle_T, DensityF
   const double _beta;
 
  public:
-
   DensityForceFunctor(double cutoff, double alpha, double beta)
       : autopas::PairwiseFunctor<Particle_T, DensityForceFunctor<Particle_T>>(cutoff),
         _cutoff{cutoff},

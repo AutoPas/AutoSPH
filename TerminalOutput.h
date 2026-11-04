@@ -5,17 +5,18 @@
 
 #pragma once
 
-#include <iostream>
-#include <string>
 #include <sys/ioctl.h>
 #include <unistd.h>
 
+#include <iostream>
+#include <string>
+
 class TerminalOutput {
-private:
+ private:
   size_t terminalWidth;
   bool showProgressBar;
 
-public:
+ public:
   TerminalOutput() {
     terminalWidth = getTerminalWidth();
     showProgressBar = true;
@@ -28,7 +29,7 @@ public:
     // test all std pipes to get the current terminal width
     for (auto fd : {STDOUT_FILENO, STDIN_FILENO, STDERR_FILENO}) {
       if (isatty(fd)) {
-        struct winsize w {};
+        struct winsize w{};
         ioctl(fd, TIOCGWINSZ, &w);
         terminalWidth = w.ws_col;
         break;
@@ -55,7 +56,9 @@ public:
   }
 
   void printProgress(size_t iterationProgress, size_t maxIterations) {
-    if (not showProgressBar) { return; }
+    if (not showProgressBar) {
+      return;
+    }
 
     // percentage of iterations complete
     const double fractionDone = static_cast<double>(iterationProgress) / static_cast<double>(maxIterations);
