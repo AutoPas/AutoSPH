@@ -97,46 +97,45 @@ bool calculateGhostPosVel(double &pos, double &vel, double boxMin, double boxMax
   return false;
 }
 
+bool addGhostPosVel(size_t dim, double cutoff, double boundarySpacing, std::array<double, 3> &boxMin, std::array<double, 3> &boxMax,
+                    std::vector<std::array<double, 3>> &positions, std::vector<std::array<double, 3>> &velocities, 
+                    std::array<double, 3> &newPos, std::array<double, 3> &newVel) {
+  double pos = positions[0][dim];
+  double vel = velocities[0][dim];
+
+  if (calculateGhostPosVel(pos, vel, boxMin[dim], boxMax[dim], cutoff, boundarySpacing)){
+    newPos[dim] = pos;
+    newVel[dim] = vel;
+    positions.push_back(newPos);
+    velocities.push_back(newVel);
+    return true;
+  }
+  return false;
+}
+
 void generateGhostParticles(AutoPasContainer &sphSystem, double cutoff, double boundarySpacing, double boundaryPressure) {
-  std::vector<Particle> ghosts;
   std::array<double, 3> boxMin = sphSystem.getBoxMin();
   std::array<double, 3> boxMax = sphSystem.getBoxMax();
-  std::array<double, 3> newPosition, newVelocity;
-  bool needs_ghost;
-  double pos, vel;
+  std::array<double, 3> newPos, newVel;
+  std::vector<Particle> ghosts;
 
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
     std::vector<std::array<double, 3>> positions = { part->getR() };
     std::vector<std::array<double, 3>> velocities = { part->getV() };
-    for (size_t dim = 0; dim < 3; dim++) {
-      pos = positions[0][dim];
-      vel = velocities[0][dim];
-      if (calculateGhostPosVel(pos, vel, boxMin[dim], boxMax[dim], cutoff, boundarySpacing)){
-        newPosition = positions[0];
-        newVelocity = velocities[0];
-        newPosition[dim] = pos;
-        newVelocity[dim] = vel;
-        positions.push_back(newPosition);
-        velocities.push_back(newVelocity);
-        for (size_t dim2 = dim + 1; dim2 < 3; dim2++) {
-          pos = positions[0][dim2];
-          vel = velocities[0][dim2];
-          if (calculateGhostPosVel(pos, vel, boxMin[dim2], boxMax[dim2], cutoff, boundarySpacing)){
-            newPosition[dim2] = pos;
-            newVelocity[dim2] = vel;
-            positions.push_back(newPosition);
-            velocities.push_back(newVelocity);
-            for (size_t dim3 = dim2 + 1; dim3 < 3; dim3++) {
-              pos = positions[0][dim3];
-              vel = velocities[0][dim3];
-              if (calculateGhostPosVel(pos, vel, boxMin[dim3], boxMax[dim3], cutoff, boundarySpacing)){
-                newPosition[dim3] = pos;
-                newVelocity[dim3] = vel;
-                positions.push_back(newPosition);
-                velocities.push_back(newVelocity);
-                newPosition = positions[1];
-                newVelocity = velocities[1];
-              }
+
+    // Checks if the particle is close to a boundary in each dimension and creates 1 ghost if it is within cutoff distance
+    // of 1 wall; creates 3 ghosts in case it is close to 2 walls; and 7 ghosts if it is close to 3 walls.
+    for (size_t dim1 = 0; dim1 < 3; dim1++) {
+      newPos = positions[0];
+      newVel = velocities[0];
+      if (addGhostPosVel(dim1, cutoff, boundarySpacing, boxMin, boxMax, positions, velocities, newPos, newVel)) {
+        for (size_t dim2 = dim1 + 1; dim2 < 3; dim2++) {
+          if (addGhostPosVel(dim2, cutoff, boundarySpacing, boxMin, boxMax, positions, velocities, newPos, newVel)) {
+            if (dim2 == 1) {
+              size_t dim3 = 2;
+              addGhostPosVel(dim3, cutoff, boundarySpacing, boxMin, boxMax, positions, velocities, newPos, newVel);
+              newPos = positions[1];
+              newVel = velocities[1];
             }
           }
         }
