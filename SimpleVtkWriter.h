@@ -11,7 +11,6 @@
 #include <sys/stat.h>
 #include "autopas/AutoPas.h"
 #include "SPHParticle.h"
-// #include "src/TypeDefinitions.h" // Ensure this contains your ParticleType definition
 
 namespace fs = std::filesystem;
 using ParticleType = SPHParticle;
@@ -165,14 +164,12 @@ private:
              << "    <Piece NumberOfCells=\"0\" NumberOfPoints=\"" << numParticles << "\">\n"
              << "      <PointData>\n";
 
-        // Velocities
         file << "        <DataArray Name=\"velocities\" NumberOfComponents=\"3\" format=\"ascii\" type=\"Float32\">\n";
         for (auto p = container.begin(iterator); p.isValid(); ++p) {
             auto v = p->getV(); file << "        " << v[0] << " " << v[1] << " " << v[2] << "\n";
         }
         file << "        </DataArray>\n";
 
-        // Forces
         file << "        <DataArray Name=\"forces\" NumberOfComponents=\"3\" format=\"ascii\" type=\"Float32\">\n";
         for (auto p = container.begin(iterator); p.isValid(); ++p) {
             auto f = p->getF(); file << "        " << f[0] << " " << f[1] << " " << f[2] << "\n";
@@ -198,7 +195,6 @@ private:
         file << "      </PointData>\n<CellData/>\n<Points>\n"
              << "        <DataArray Name=\"positions\" NumberOfComponents=\"3\" format=\"ascii\" type=\"Float32\">\n";
 
-        // Positions with boundary dynamic precision logic kept intact
         const auto boxMax = container.getBoxMax();
         for (auto p = container.begin(iterator); p.isValid(); ++p) {
             auto pos = p->getR();

@@ -1,7 +1,8 @@
 /*
  * The functions getTerminalWidth and printProgress
- * were taken from examples/md-flexible/src/Simulation.cpp
+ * were taken from AutoPas/examples/md-flexible/src/Simulation.cpp
  */
+
 #pragma once
 
 #include <iostream>

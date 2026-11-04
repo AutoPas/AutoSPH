@@ -192,10 +192,10 @@ int main(int argc, char* argv[]) {
 
   AutoPasContainer sphSystem;
   double dt, t_end;
-  int write_freq;
-  bool write_files;
+  int writeFreq;
+  bool writeFiles;
   double cutoff, smoothingLength, density, alpha, beta, boundarySpacing, boundaryPressure;
-  config.SetupContainer(sphSystem, &dt, &t_end, &write_freq, &write_files, &cutoff, &smoothingLength,
+  config.SetupContainer(sphSystem, &dt, &t_end, &writeFreq, &writeFiles, &cutoff, &smoothingLength,
                         &density, &alpha, &beta, &boundarySpacing, &boundaryPressure);
 
   std::set<autopas::ContainerOption> allowedContainers{autopas::ContainerOption::directSum,
@@ -255,9 +255,9 @@ int main(int argc, char* argv[]) {
 
     velocityVerletSecondStep(sphSystem, dt);
 
-    if (step % write_freq == 0) {
+    if (step % writeFreq == 0) {
       terminalOutput.printProgress(step, maxIterations);
-      if (write_files){
+      if (writeFiles){
         vtkWriter.recordTimestep(step, sphSystem, boxMin, boxMax, autopas::IteratorBehavior::owned);
         vtkWriter.recordProbes(step, time, fileStep, cutoff, smoothingLength, sphSystem, probes);
         ++fileStep;

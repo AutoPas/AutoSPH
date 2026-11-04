@@ -13,7 +13,6 @@ class DensityForceFunctor : public autopas::PairwiseFunctor<Particle_T, DensityF
  public:
 
   DensityForceFunctor(double cutoff, double alpha, double beta)
-      // the actual cutoff used is dynamic. 0 is used to pass the sanity check.
       : autopas::PairwiseFunctor<Particle_T, DensityForceFunctor<Particle_T>>(cutoff),
         _cutoff{cutoff},
         _alpha{alpha},
@@ -29,13 +28,14 @@ class DensityForceFunctor : public autopas::PairwiseFunctor<Particle_T, DensityF
 
   /**
    * Calculates the contribution of the interaction of particle i and j to the
-   * hydrodynamic force.
-   * It is not symmetric, because the smoothing lenghts of the two particles can
-   * be different.
+   *  - rate of change of the density
+   *  - hydrodynamic force (rate of change of the velocity)
+   *  - rate of change of the energy
    * @param i first particle of the interaction
    * @param j second particle of the interaction
    * @param newton3 defines whether or whether not to use newton 3
    */
+
   void AoSFunctor(Particle_T &i, Particle_T &j, bool newton3 = true) override {
     using namespace autopas::utils::ArrayMath::literals;
 
@@ -44,7 +44,6 @@ class DensityForceFunctor : public autopas::PairwiseFunctor<Particle_T, DensityF
     }
 
     const std::array<double, 3> dr = i.getR() - j.getR();
-    // const PS::F64vec dr = ep_i[i].pos - ep_j[j].pos;
 
     const double distance = autopas::utils::ArrayMath::L2Norm(dr);
 
@@ -53,7 +52,6 @@ class DensityForceFunctor : public autopas::PairwiseFunctor<Particle_T, DensityF
     }
 
     const std::array<double, 3> dv = i.getV() - j.getV();
-    // const PS::F64vec dv = ep_i[i].vel - ep_j[j].vel;
 
     double dvdr = autopas::utils::ArrayMath::dot(dv, dr);
 
