@@ -1,23 +1,15 @@
-/**
- * @file sph-main-mpi.cpp
- * @date 10.04.2018
- * @author seckler
- */
-
 #include <mpi.h>
-
 #include <array>
-#include <cmath>
 #include <iostream>
 
 #include "autopas/AutoPas.h"
+#include "autopas/utils/ArrayMath.h"
+
 #include "SPHParticle.h"
 #include "DensityForceFunctor.h"
 #include "SimpleVtkWriter.h"
 #include "SPHConfig.h"
 #include "TerminalOutput.h"
-
-#include "autopas/utils/ArrayMath.h"
 
 using Particle = SPHParticle;
 using AutoPasContainer = autopas::AutoPas<Particle>;
@@ -71,14 +63,12 @@ void updatePressure(AutoPasContainer &sphSystem, double density_0) {
 }
 
 void calculateDensityForce(AutoPasContainer &sphSystem, DensityForceFunctor<Particle> &densityForceFunctor) {
-
   AUTOPAS_OPENMP(parallel)
   for (auto part = sphSystem.begin(autopas::IteratorBehavior::owned); part.isValid(); ++part) {
     part->setDensityDot(0.);
     part->setAcceleration(std::array<double, 3>{0., 0., 0.});
     part->setEngDot(0.);
   }
-
   sphSystem.computeInteractions(&densityForceFunctor);
 }
 
@@ -90,21 +80,22 @@ void addExternalForce(AutoPasContainer &sphSystem, const std::array<double, 3> &
 }
 
 bool calculateGhostPosVel(double &pos, double &vel, double boxMin, double boxMax, double cutoff, double boundarySpacing) {
+  // If the particle is close enough to a boundary, it returns true and
+  // calculates the position and velocity of the ghost particle in 1 dimension.
   double min_d = pos - boxMin;
   double max_d = boxMax - pos;
 
   if (min_d < cutoff) {
-    pos = boxMin - min_d - boundarySpacing; // Mirrored position
-    vel = -vel; // Reverse normal velocity (no-slip)
+    pos = boxMin - min_d - boundarySpacing;
+    vel = -vel;
     return true;
   } else if (max_d < cutoff) {
-    pos = boxMax + max_d + boundarySpacing; // Mirrored position
-    vel = -vel; // Reverse normal velocity (no-slip)
+    pos = boxMax + max_d + boundarySpacing;
+    vel = -vel;
     return true;
   }
   return false;
 }
-
 
 void generateGhostParticles(AutoPasContainer &sphSystem, double cutoff, double boundarySpacing, double boundaryPressure) {
   std::vector<Particle> ghosts;
@@ -170,23 +161,19 @@ void addEnteringParticles(AutoPasContainer &sphSystem, std::vector<Particle> &in
   std::array<double, 3> boxMax = sphSystem.getBoxMax();
 
   for (auto &p : invalidParticles) {
-    // first we have to correct the position of the particles, s.t. they lie inside of the box.
     auto pos = p.getR();
     auto vel = p.getV();
     for (size_t dim = 0; dim < 3; dim++) {
       if (pos[dim] < boxMin[dim]) {
-        // has to be smaller than boxMax
         pos[dim] = std::min(std::nextafter(boxMax[dim], -1), boxMin[dim] + (boxMin[dim] - pos[dim]));
         vel[dim] *= -1;
       } else if (pos[dim] >= boxMax[dim]) {
-        // should at least be boxMin
         pos[dim] = std::max(boxMin[dim], boxMax[dim] - (pos[dim] - boxMax[dim]));
         vel[dim] *= -1;
       }
     }
     p.setR(pos);
     p.setV(vel);
-    // add moved particles again
     sphSystem.addParticle(p);
   }
 }
@@ -205,7 +192,6 @@ int main(int argc, char* argv[]) {
   }
 
   AutoPasContainer sphSystem;
-  std::array<double, 3> boxMin(config.getBoxMin()), boxMax(config.getBoxMax());
   double dt, t_end;
   int write_freq;
   bool write_files;
@@ -229,12 +215,12 @@ int main(int argc, char* argv[]) {
 
   sphSystem.init();
 
+  std::array<double, 3> boxMin(config.getBoxMin()), boxMax(config.getBoxMax());
   std::array<double, 3> gravity = config.getGravity();
+  std::array<double, 3> externalForce = gravity;
   std::vector<double> forceTimestamps = config.getForceTimestamps();
   std::vector<std::array<double, 3>> customForces = config.getCustomForces();
   std::vector<std::array<double, 3>> probes = config.getProbes();
-
-  std::array<double, 3> externalForce = gravity;
 
   config.SetupParticles(sphSystem);
   InitializePressure(sphSystem, density);
@@ -271,8 +257,6 @@ int main(int argc, char* argv[]) {
     velocityVerletSecondStep(sphSystem, dt);
 
     if (step % write_freq == 0) {
-      // AutoPasLog(INFO, "Iteration {} completed", step);
-      // AutoPasLog(INFO, "Number of halo particles: {}", sphSystem.getNumberOfParticles(autopas::IteratorBehavior::halo));
       terminalOutput.printProgress(step, maxIterations);
       if (write_files){
         vtkWriter.recordTimestep(step, sphSystem, boxMin, boxMax, autopas::IteratorBehavior::owned);
