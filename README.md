@@ -2,10 +2,11 @@
 
 An SPH simulator built on top of the [AutoPas](https://github.com/AutoPas/AutoPas) library.
 
-This project was developed for the Master's Thesis in Computational Science and Engineering: **Implementation of an Auto-Tuned SPH Simulator with AutoPas** by Iñigo Ruiz, advised by Manish Mishra at TUM. The thesis document is available [here](https://mediatum.ub.tum.de/1864913).
+This project was developed for the Master's Thesis in Computational Science and Engineering titled **"Implementation of an Auto-Tuned SPH Simulator with AutoPas"**
+by Iñigo Ruiz, advised by Manish Mishra at TUM. The thesis document is available [here](https://mediatum.ub.tum.de/1864913).
 
-It is intended for 3D simulaton of incompressible flows.
-The `input` folder contain some examples of initial configuration files.
+It is intended for 3D simulation of incompressible flows.
+The `input` folder contains some examples of initial configuration files.
 Below are shown animations and screenshots of the output visualized with [ParaView](https://www.paraview.org/).
 
 ## Benchmark cases
@@ -19,7 +20,7 @@ Below are shown animations and screenshots of the output visualized with [ParaVi
 ![sloshing_benchmark](https://github.com/AutoPas/AutoSPH/blob/main/docs/animations/sloshing.gif?raw=true)
 
 
-## Paraview Analysis
+## ParaView Analysis
 
 ![dambreak_paraview](https://github.com/AutoPas/AutoSPH/blob/main/docs/paraview_screenshots/paraview_dambreak.png?raw=true)
 
